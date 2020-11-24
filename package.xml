@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>corridor</name>
+  <version>1.0.1</version>
+  <description>Constructs a corridor from a reference line and boundary information, or a lanelet from the lanelet2 library.</description>
+
+  <license>BSD</license>
+  <maintainer email="dspetrich@gmail.com">Dominik Petrich</maintainer>
+  <author email="dspetrich@gmail.com">Dominik Petrich</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>mrt_cmake_modules</buildtool_depend>
+  <buildtool_export_depend>mrt_cmake_modules</buildtool_export_depend>
+  <test_depend>gtest</test_depend>
+  <depend>eigen</depend>
+  <depend>boost</depend>
+  <depend>libboost-python-dev</depend>
+</package>

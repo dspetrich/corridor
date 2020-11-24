@@ -1,0 +1,9 @@
+{
+    "python.pythonPath": "/usr/bin/python",
+    "python.analysis.extraPaths": [
+        "/home/dsp//Develop/catkin_ws/src/cubic_spline/python_api/scripts/splines"
+    ],
+    "cSpell.words": [
+        "Frenet"
+    ]
+}
