@@ -26,7 +26,7 @@ class FrenetFrameTest : public ::testing::Test {
 
 TEST_F(FrenetFrameTest, EmptyConstructor) {  // NOLINT
   FrenetFrame2D frenet_frame;
-  EXPECT_EQ(frenet_frame.frenet_base().id, InvalId);
+  EXPECT_EQ(frenet_frame.frenet_base().id, InvalidId);
 }
 
 TEST_F(FrenetFrameTest, Constructor) {  // NOLINT

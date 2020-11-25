@@ -103,8 +103,9 @@ class PathInteractor(object):
         #     spline.constructFrenetFrame(target_point)
         #     for frenet_frame in spline.frenet_frames:
         #         self.frenetFrameList[frenet_frame].set_data(points)
-        for ff in self.frenetFrameList:
-            ff.remove()
+        for k, v in self.frenetFrameList.items():
+            v.remove()
+        self.frenetFrameList.clear()
         self.constructFrenetFrames()
 
     def draw_callback(self, event):
@@ -231,15 +232,15 @@ class PathInteractor(object):
         # Update of all structures
         # if self._ind is not None:
         # Update vertices
+        self.canvas.restore_region(self.background)
         self.vertices.set_data(self.nodes.x, self.nodes.y)
         # Update splines
         for k, v in self.splineList.items():
             # Generate new points from updated nodes
             points = k.generatePointsFrom(self.nodes)
             v.set_data(points.x, points.y)
-        self.constructFrenetFrames()
+        self.updateFrenetFrames()
 
-        self.canvas.restore_region(self.background)
         self.ax.draw_artist(self.vertices)
         self.ax.draw_artist(self.target_point)
         for spl in self.splineList.keys():

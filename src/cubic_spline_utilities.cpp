@@ -136,7 +136,7 @@ bool FindSegmentCandidates(
       segment_points->emplace_back(SegmentInfo<DataIdx, RealType>(0, 0.0));
     }
 
-    if (0.0 < projections[projections.rows() - 1]) {
+    if (0.0 <= projections[projections.rows() - 1]) {
       // Point behind last node
       const auto last_node_idx = projections.rows() - 1;
       const auto delta_s = (data.col(last_node_idx)[kArcLength] -
@@ -159,9 +159,6 @@ bool FindProjectionOnSegment(const DataSegment<RealType>& data_segment,
       data_segment.col(1)[kArcLength] - data_segment.col(0)[kArcLength];
   RealType delta_l = 0.f;
 
-  std::cout << "Start: " << l_min << ", " << l_max << std::endl;
-  std::cout << *segment_info << std::endl;
-
   // Check current arc-length in segment_info
   if (segment_info->relative_arc_length <= l_min) {
     segment_info->relative_arc_length = 0.f;
@@ -179,13 +176,9 @@ bool FindProjectionOnSegment(const DataSegment<RealType>& data_segment,
   }
 
   //! 1) Binary Search (find the closest base point)
-  for (int count = 0; count < 15; count++) {
+  for (int count = 0; count < 20; count++) {
     segment_info->relative_arc_length = 0.5f * (l_max - l_min) + l_min;
     delta_l = ProjectPointToTangent(data_segment, *segment_info, point);
-
-    // std::cout << "Binary Search:" << count << ": " << l_min << ", " << l_max
-    //           << ", d = " << delta_l << std::endl;
-    // std::cout << *segment_info << std::endl;
 
     if (std::abs(delta_l) < epsilon) {
       return true;
@@ -205,6 +198,7 @@ bool FindProjectionOnSegment(const DataSegment<RealType>& data_segment,
     segment_info->relative_arc_length =
         limit(segment_info->relative_arc_length + delta_l, l_min, l_max);
     delta_l = ProjectPointToTangent(data_segment, *segment_info, point);
+
     if (std::abs(delta_l) < epsilon) {
       return true;
     }
@@ -241,30 +235,12 @@ FrenetFrame2D ConstructFrenetFrame(const DataSegment<RealType>& data_segment,
 
 FrenetFrames2D ConstructFrenetFrames(const DataMatrix<RealType>& data,
                                      const CartesianPoint2D& point) {
-  // Get all relevant spline segments (perpendicular projection)
-  SegmentInfoVector<DataIdx, RealType> segment_candidates;
-  bool matched = FindSegmentCandidates(data, point, &segment_candidates);
-
+  FrenetPositionsWithFrames positions_with_frames =
+      ConstructFrenetPositionsWithFrames(data, point);
   FrenetFrames2D frenet_frames;
-  // Find pependicular projection of point onto segments
-  for (auto& segment : segment_candidates) {
-    const DataSegment<RealType>& data_segment =
-        data.block<kSize, 2>(kPoint_x, segment.idx);
-    if (matched) {
-      // Only try to find the projection point if the point was matched to the
-      // segments. In case it wasn't matched, the point is located before or
-      // after the spline (or both, in case of a circle like spline). Then, the
-      // arc-length is already correct.
-      const bool success =
-          FindProjectionOnSegment(data_segment, &segment, point);
-      if (!success) {
-        std::cout << "ERROR: no valid Frenet Frame found on segment candidate: "
-                  << segment.idx << std::endl;
-        assert(false);
-      }
-    }
-    frenet_frames.emplace_back(ConstructFrenetFrame(data_segment, segment));
-  }
+  std::transform(positions_with_frames.begin(), positions_with_frames.end(),
+                 std::back_inserter(frenet_frames),
+                 [](const FrenetPositionWithFrame& p) { return p.frame; });
   return frenet_frames;
 }
 
@@ -283,8 +259,8 @@ FrenetPositionsWithFrames ConstructFrenetPositionsWithFrames(
     if (matched) {
       // Only try to find the projection point if the point was matched to the
       // segments. In case it wasn't matched, the point is located before or
-      // after the spline (or both, in case of a circle like spline). Then, the
-      // arc-length is already correct.
+      // after the spline (or both, in case of a circle like spline). Then,
+      // the arc-length is already correct.
       const bool success =
           FindProjectionOnSegment(data_segment, &segment, point);
       if (!success) {
@@ -297,27 +273,21 @@ FrenetPositionsWithFrames ConstructFrenetPositionsWithFrames(
         ConstructFrenetFrame(data_segment, segment, id), point);
   }
   return positions_with_frames;
-}  // namespace cubic_spline
+}
 
 FrenetPoint2D ConvertToFrenetPoint2D(const DataMatrix<RealType>& data,
                                      const CartesianPoint2D& point) {
   // Construct frenet frame candidates for conversion
-  FrenetFrames2D frenet_frames = ConstructFrenetFrames(data, point);
-  FrenetPoints2D frenet_points;
-  for (const auto& ff : frenet_frames) {
-    frenet_points.emplace_back(ff.FromCartesianPoint(point));
-  }
-
+  FrenetPositionsWithFrames positions_with_frames =
+      ConstructFrenetPositionsWithFrames(data, point);
   // Get frenet point with smallest deviation from the reference line
-  FrenetPoints2D::iterator p_iter =
-      std::min_element(frenet_points.begin(), frenet_points.end(),
-                       [](const FrenetPoint2D& a, const FrenetPoint2D& b) {
-                         return a.d_value() < b.d_value();
-                       });
-  FrenetPoint2D closest_frenet_pt;
-  assert(p_iter != frenet_points.end());
-  closest_frenet_pt = (*p_iter);
-  return closest_frenet_pt;
+  FrenetPositionsWithFrames::iterator p_iter = std::min_element(
+      positions_with_frames.begin(), positions_with_frames.end(),
+      [](const FrenetPositionWithFrame& a, const FrenetPositionWithFrame& b) {
+        return a.position.d_value() < b.position.d_value();
+      });
+  assert(p_iter != positions_with_frames.end());
+  return p_iter->position;
 }
 
 FrenetPolyline ConvertToFrenetPolyline(const DataMatrix<RealType>& data,

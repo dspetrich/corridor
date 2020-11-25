@@ -33,7 +33,9 @@ class CubicSplineUtilitiesTest : public ::testing::Test {
 TEST_F(CubicSplineUtilitiesTest, FindSegmentCandidates) {  // NOLINT
   DataMatrix<RealType> data = naturalSplineDataMatrixFromPoints(refline_);
 
-  const auto segment_points = FindSegmentCandidates(data, point_);
+  SegmentInfoVector<DataIdx, RealType> segment_points;
+  const bool matched = FindSegmentCandidates(data, point_, &segment_points);
+  ASSERT_TRUE(matched);
   EXPECT_EQ(segment_points.size(), 3);
   EXPECT_FLOAT_EQ(segment_points[0].idx, 0);
   EXPECT_FLOAT_EQ(segment_points[1].idx, 4);

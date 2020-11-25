@@ -155,7 +155,7 @@ bool FindProjectionOnSegment(const DataSegment<RealType>& data_segment,
  */
 FrenetFrame2D ConstructFrenetFrame(const DataSegment<RealType>& data_segment,
                                    SegmentInfo<DataIdx, RealType> segment_info,
-                                   const IdType id = InvalId);
+                                   const IdType id = InvalidId);
 
 /**
  * @brief
@@ -177,7 +177,7 @@ FrenetFrames2D ConstructFrenetFrames(const DataMatrix<RealType>& data,
  */
 FrenetPositionsWithFrames ConstructFrenetPositionsWithFrames(
     const DataMatrix<RealType>& data, const CartesianPoint2D& point,
-    const IdType id = InvalId);
+    const IdType id = InvalidId);
 
 /**
  * @brief Converts list of x,y points to a FrenetPolyline

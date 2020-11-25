@@ -15,7 +15,7 @@ namespace cubic_spline {
 
 class CubicSpline {
  public:
-  CubicSpline(const IdType id = InvalId,
+  CubicSpline(const IdType id = InvalidId,
               const RealType epsilon = g_epsilon_arc_length)
       : id_(id), epsilon_(epsilon) {}
   CubicSpline(const IdType id, const CartesianPoints2D& points,
@@ -24,7 +24,7 @@ class CubicSpline {
     bool result = constructSplineData(points);
     if (result == false) {
       // If spline data is corrupted, id is changed to invalid
-      id_ = InvalId;
+      id_ = InvalidId;
     }
   }
   CubicSpline(const IdType id, const std::vector<RealType>& x_vec,
@@ -34,7 +34,7 @@ class CubicSpline {
     bool result = constructSplineData(x_vec, y_vec);
     if (result == false) {
       // If spline data is corrupted, id is changed to invalid
-      id_ = InvalId;
+      id_ = InvalidId;
     }
   }
 

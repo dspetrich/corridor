@@ -50,7 +50,7 @@ using FrenetVectors2D = std::vector<FrenetVector2D>;
  */
 struct FrenetBase2D {
   // Data
-  IdType id = InvalId;   //!< Spline id
+  IdType id = InvalidId;   //!< Spline id
   RealType arc_length;   //!< Arc length from start of reference line [m]
   RealType orientation;  //!< Signed orientation of spline at frenet base [rad]
   RealType curvature;    //!< Signed curvature of spline at frenet base [1/m]

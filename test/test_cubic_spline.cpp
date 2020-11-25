@@ -21,7 +21,7 @@ class CubicSplineTest : public ::testing::Test {
 
 TEST_F(CubicSplineTest, constructor) {  // NOLINT
   CubicSpline default_constructor_spline;
-  EXPECT_EQ(InvalId, default_constructor_spline.GetId());
+  EXPECT_EQ(InvalidId, default_constructor_spline.GetId());
   EXPECT_EQ(0, default_constructor_spline.GetSize());
   EXPECT_FLOAT_EQ(0.f, default_constructor_spline.GetTotalLength());
 
@@ -41,7 +41,7 @@ TEST_F(CubicSplineTest, constructor) {  // NOLINT
   // invalid (empty) points
   std::vector<RealType> x_vec, y_vec;
   CubicSpline cubic_spline_4(300, x_vec, y_vec);  // invlad points
-  EXPECT_EQ(InvalId, cubic_spline_4.GetId());
+  EXPECT_EQ(InvalidId, cubic_spline_4.GetId());
   EXPECT_EQ(0, cubic_spline_4.GetSize());
   EXPECT_FLOAT_EQ(0.f, cubic_spline_4.GetTotalLength());
 }
