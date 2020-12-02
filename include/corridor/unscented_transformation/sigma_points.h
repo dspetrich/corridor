@@ -17,7 +17,7 @@ namespace unscented_transformation {
  */
 class MerweScaledSigmaPoints {
  public:
-  MerweScaledSigmaPoints(const int n = 0, const RealType alpha = 0.1,
+  MerweScaledSigmaPoints(const int n = 0, const RealType alpha = 1e-3,
                          const RealType beta = 2.0, const RealType kappa = 0.0)
       : n_(n), alpha_(alpha), beta_(beta), kappa_(kappa) {
     // number sigma points

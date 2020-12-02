@@ -176,7 +176,7 @@ bool FindProjectionOnSegment(const DataSegment<RealType>& data_segment,
   }
 
   //! 1) Binary Search (find the closest base point)
-  for (int count = 0; count < 20; count++) {
+  for (int count = 0; count < 100; count++) {
     segment_info->relative_arc_length = 0.5f * (l_max - l_min) + l_min;
     delta_l = ProjectPointToTangent(data_segment, *segment_info, point);
 

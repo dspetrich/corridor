@@ -23,6 +23,15 @@ struct StateMeanAndCovarianceMatrix {
   Eigen::MatrixXd covMat;
 };
 
+// Introspection
+std::ostream& operator<<(std::ostream& os,
+                         const StateMeanAndCovarianceMatrix& state) {
+  os << "StateMeanAndCovarianceMatrix\n";
+  os << "mean: " << state.mean.transpose() << "\n";
+  os << state.covMat;
+  return os;
+}
+
 StateMeanAndCovarianceMatrix EstimateStateMeanAndCovarianceMatrix(
     const Eigen::MatrixXd transformed_sigma_pts,
     const Eigen::VectorXd weights_mean, const Eigen::VectorXd weights_cov_mat,
