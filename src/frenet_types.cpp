@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "corridor/cubic_spline/cubic_spline_types.h"
+#include "corridor/unscented_transformation/unscented_transformation.h"
 
 using namespace corridor;
 
@@ -49,6 +50,50 @@ RealType FrenetFrame2D::FromCartesianOrientation(
   const auto angle = cartesian_orientation - frenet_base_.orientation;
   return constrainAngle(angle);
 }
+
+FrenetStateVector2D FrenetFrame2D::FromCartesianStateVector(
+    const CartesianStateVector2D& cartesian_state,
+    const bool moving_frenet_frame) const {
+  // Simple transformation as projection of the cartesian state position and
+  // vectors onto the axes of the Frenet frame
+  FrenetPoint2D position = FromCartesianPoint(cartesian_state.position());
+  FrenetVector2D velocity = FromCartesianVector(cartesian_state.velocity());
+
+  if (moving_frenet_frame) {
+    // In case of assuming a moving Frenet frame we need some correction terms
+    // for accounting the rotation of the Frenet Frame.
+    // Velocity and acceleration of the Frenet base is assumed to be the
+    // projection of the velocity onto the tangent vector of the curve.
+    const RealType vel_p = velocity.l();
+    const RealType theta_dot = frenet_base_.curvature * vel_p;
+
+    const CartesianVector2D relative_vector =
+        cartesian_state.position() - origin_;
+    RotationMatrix rotMat_C2F_prime;
+    rotMat_C2F_prime << normal_.x(), normal_.y(), -tangent_.x(), -tangent_.y();
+    velocity += theta_dot * rotMat_C2F_prime * relative_vector;
+  }
+  return FrenetStateVector2D(position, velocity);
+}
+
+FrenetStateCovarianceMatrix2D FrenetFrame2D::FromCartesianStateCovarianceMatrix(
+    const CartesianStateCovarianceMatrix2D& state_vector_covariance_matrix,
+    const bool moving_frenet_frame) const {
+  // First simple quasi-linear transformation of the covariance matrices.
+  const auto pos_covMat = state_vector_covariance_matrix.position();
+  const auto vel_covMat = state_vector_covariance_matrix.velocity();
+  const auto posvel_covMat = state_vector_covariance_matrix.pos_vel();
+
+  const auto frenet_pos_covMat =
+      rotMat_C2F_ * pos_covMat * rotMat_C2F_.transpose();
+  const auto frenet_vel_covMat =
+      rotMat_C2F_ * vel_covMat * rotMat_C2F_.transpose();
+  const auto frenet_pos_vel_covMat =
+      rotMat_C2F_ * posvel_covMat * rotMat_C2F_.transpose();
+
+  return FrenetStateCovarianceMatrix2D(pos_covMat, vel_covMat,
+                                       frenet_pos_vel_covMat);
+};
 
 // /////////////////////////////////////////////////////////////////////////////
 // Frenet Polyline
@@ -96,3 +141,18 @@ RealType FrenetPolyline::deviationAt(const RealType query_l) const {
 
   return delta_d * alpha + data_(DataType::kDeviation, start_index);
 };
+
+// /////////////////////////////////////////////////////////////////////////////
+// Frenet state (mean and covariance matrix)
+// /////////////////////////////////////////////////////////////////////////////
+
+// const PolarStatePtr FrenetState2D::polarVelocityState() {
+//   if (polar_velocity_state_ != nullptr) {
+//     // if polar velocity is already calculated return value.
+//     return polar_velocity_state_;
+//   }
+
+//   // Polar velocity is not yet set, calculate and return it.
+
+//   return polar_velocity_state_;
+// };

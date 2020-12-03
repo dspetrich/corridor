@@ -36,7 +36,7 @@ TEST_F(UnscentedTransformationTest, SigmaPoints) {
   EXPECT_EQ(sigmas.cols(), 7);
   EXPECT_FLOAT_EQ(sigma_points_.weightsMean().sum(), 1.0);
   // Merwe weights don't necessarily sum to one!
-  EXPECT_FLOAT_EQ(sigma_points_.weightsCovMat().sum(), 3.99);
+  EXPECT_FLOAT_EQ(sigma_points_.weightsCovMat().sum(), 3.999999);
 }
 
 TEST_F(UnscentedTransformationTest, UT_boxTransformation) {

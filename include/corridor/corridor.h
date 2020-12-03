@@ -1,6 +1,6 @@
 #pragma once
 
-#include <lanelet2_core/primitives/Lanelet.h>
+#include <map>
 
 #include "corridor/basic_types.h"
 #include "corridor/cartesian_types.h"
@@ -8,8 +8,6 @@
 #include "corridor/frenet_types.h"
 
 namespace corridor {
-
-enum class CorridorType { kNone = 0, kLaneSegment = 1, kCrosswalk = 2 };
 
 class Corridor;
 using CorridorPtr = std::shared_ptr<Corridor>;
@@ -25,11 +23,13 @@ using BoundaryDistances = std::pair<RealType, RealType>;
 
 class Corridor {
  public:
-  Corridor() : id_(InvalidId), type_(CorridorType::kNone) {}
-  // Corridor(const ll::ConstLanelet& lanelet);
+  Corridor() {}
+  Corridor(const IdType id, const CartesianPoints2D& centerline_pts,
+           const CartesianPoints2D& left_boundary_pts,
+           const CartesianPoints2D& right_boundary_pts);
 
-  //! Get the unique id of underlying lane let
-  IdType id() const noexcept { return id_; }
+  //! Get the unique id of underlying reference line
+  IdType id() const noexcept { return referenceLine_.GetId(); }
 
   BoundaryDistances signedDistancesAt(const RealType arc_length) const noexcept;
   RealType widthAt(const RealType arc_length) const noexcept;
@@ -49,12 +49,8 @@ class Corridor {
                                   const CorridorPtr& corridor);
 
  private:
-  // Id and type of the corridor
-  IdType id_;
-  CorridorType type_;
-
-  // Reference line for the frenet frame. Not necessarily a centerline, but has
-  // to be located between the left and right boundary.
+  // Reference line for the frenet frame. Not necessarily a centerline, but
+  // has to be located between the left and right boundary.
   cubic_spline::CubicSpline referenceLine_;
 
   // Left and right side of the corridor are independent from the sampling of

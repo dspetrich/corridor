@@ -1,3 +1,4 @@
+#include "corridor/unscented_transformation/polar_coordinate_transformation.h"
 #include "corridor/unscented_transformation/sigma_points.h"
 #include "corridor/unscented_transformation/unscented_transformation.h"
 
@@ -40,46 +41,58 @@ FlatPolarStateAndCovMat2D Convert(
   flat_polar_state.var_phi = polar_state.covMat(1, 1);
   flat_polar_state.cov_rphi = polar_state.covMat(1, 0);
   return flat_polar_state;
-}
+};
 
-Eigen::Vector2d PolarToCartesianTransformation2D(
-    const Eigen::Vector2d& polar_vector) {
-  Eigen::Vector2d cartesian_vector;
-  const auto& radius = polar_vector(0);
-  const auto& phi = polar_vector(1);
-  cartesian_vector(0) = radius * std::cos(phi);
-  cartesian_vector(1) = radius * std::sin(phi);
-  return cartesian_vector;
-}
+// Eigen::Vector2d PolarToCartesianTransformation2D(
+//     const Eigen::Vector2d& polar_vector) {
+//   Eigen::Vector2d cartesian_vector;
+//   const auto& radius = polar_vector(0);
+//   const auto& phi = polar_vector(1);
+//   cartesian_vector(0) = radius * std::cos(phi);
+//   cartesian_vector(1) = radius * std::sin(phi);
+//   return cartesian_vector;
+// }
 
-Eigen::Vector2d CartesianToPolarTransformation2D(
-    const Eigen::Vector2d& cartesian_vector) {
-  Eigen::Vector2d polar_vector;
-  const auto& x1 = cartesian_vector(0);
-  const auto& x2 = cartesian_vector(1);
-  polar_vector(0) = std::sqrt(x1 * x1 + x2 * x2);
-  polar_vector(1) = std::atan2(x2, x1);
-  return polar_vector;
-}
+// Eigen::Vector2d CartesianToPolarTransformation2D(
+//     const Eigen::Vector2d& cartesian_vector) {
+//   Eigen::Vector2d polar_vector;
+//   const auto& x1 = cartesian_vector(0);
+//   const auto& x2 = cartesian_vector(1);
+//   polar_vector(0) = std::sqrt(x1 * x1 + x2 * x2);
+//   polar_vector(1) = std::atan2(x2, x1);
+//   return polar_vector;
+// }
 
 StateMeanAndCovarianceMatrix UnscentedTransformationPolarCoordinates(
     const StateMeanAndCovarianceMatrix& initial_state) {
-  // State tranformation: vel_x, vel_y -> abs_vel, theta
-  MerweScaledSigmaPoints sigma_pts_generator(2);
+  StateMeanAndCovarianceMatrix result(initial_state.mean.size());
 
-  const auto& sigmas = sigma_pts_generator.generateSigmaPoints(
-      initial_state.mean, initial_state.covMat);
+  PolarVector2D polar_mean;
+  PolarCovarianceMatrix2D polar_cov_mat;
 
-  // Tranformation function
-  Eigen::MatrixXd transformed_sigmas(initial_state.mean.size(), sigmas.cols());
-  for (int i = 0; i < sigmas.cols(); i++) {
-    transformed_sigmas.col(i) = CartesianToPolarTransformation2D(sigmas.col(i));
-  }
+  ToPolarUnscentedTransformation2D(initial_state.mean, initial_state.covMat,
+                                   &polar_mean, &polar_cov_mat);
 
-  return EstimateStateMeanAndCovarianceMatrix(
-      transformed_sigmas, sigma_pts_generator.weightsMean(),
-      sigma_pts_generator.weightsCovMat(), 1);
-}
+  std::cout << polar_mean.transpose() << std::endl;
+
+  return StateMeanAndCovarianceMatrix(polar_mean, polar_cov_mat);
+  // // State tranformation: vel_x, vel_y -> abs_vel, theta
+  // MerweScaledSigmaPoints sigma_pts_generator(2);
+
+  // const auto& sigmas = sigma_pts_generator.generateSigmaPoints(
+  //     initial_state.mean, initial_state.covMat);
+
+  // // Transformation function
+  // Eigen::MatrixXd transformed_sigmas(initial_state.mean.size(),
+  // sigmas.cols()); for (int i = 0; i < sigmas.cols(); i++) {
+  //   transformed_sigmas.col(i) =
+  //   CartesianToPolarTransformation2D(sigmas.col(i));
+  // }
+
+  // return EstimateStateMeanAndCovarianceMatrix(
+  //     transformed_sigmas, sigma_pts_generator.weightsMean(),
+  //     sigma_pts_generator.weightsCovMat(), 1);
+};
 
 }  // namespace unscented_transformation
 }  // namespace corridor

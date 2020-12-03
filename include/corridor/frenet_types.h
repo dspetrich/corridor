@@ -50,10 +50,10 @@ using FrenetVectors2D = std::vector<FrenetVector2D>;
  */
 struct FrenetBase2D {
   // Data
-  IdType id = InvalidId;   //!< Spline id
-  RealType arc_length;   //!< Arc length from start of reference line [m]
-  RealType orientation;  //!< Signed orientation of spline at frenet base [rad]
-  RealType curvature;    //!< Signed curvature of spline at frenet base [1/m]
+  IdType id = InvalidId;  //!< Spline id
+  RealType arc_length;    //!< Arc length from start of reference line [m]
+  RealType orientation;   //!< Signed orientation of spline at frenet base [rad]
+  RealType curvature;     //!< Signed curvature of spline at frenet base [1/m]
   RealType curvature_change_rate;  //!< Signed curvature change rate [1/m^2]
   cubic_spline::SegmentInfo<IdxType, RealType>
       segment_info;  //!< point on segments
@@ -110,7 +110,8 @@ class FrenetFrame2D {
     rotMat_C2F_ = RotationMatrix::Zero();
   }
   FrenetFrame2D(const FrenetBase2D& other_base, const CartesianPoint2D& origin,
-                const CartesianPoint2D& tangent, const CartesianPoint2D& normal)
+                const CartesianVector2D& tangent,
+                const CartesianVector2D& normal)
       : frenet_base_(other_base),
         origin_(origin),
         tangent_(tangent),
@@ -143,6 +144,14 @@ class FrenetFrame2D {
       const CartesianVector2D& cartesian_vector) const;
 
   RealType FromCartesianOrientation(const RealType cartesian_orientation) const;
+
+  FrenetStateVector2D FromCartesianStateVector(
+      const CartesianStateVector2D& state_vector,
+      const bool moving_frenet_frame = false) const;
+
+  FrenetStateCovarianceMatrix2D FromCartesianStateCovarianceMatrix(
+      const CartesianStateCovarianceMatrix2D& state_vector_covariance_matrix,
+      const bool moving_frenet_frame = false) const;
 
   const FrenetBase2D& frenet_base() const { return frenet_base_; }
   const CartesianPoint2D& origin() const { return origin_; }
@@ -255,6 +264,162 @@ inline std::ostream& operator<<(std::ostream& os, const FrenetPolyline& fpl) {
        << fpl.data_(FrenetPolyline::DataType::kDeviation, idx) << std::endl;
   }
   return os;
+};
+
+// /////////////////////////////////////////////////////////////////////////////
+// Frenet State and covariances
+// /////////////////////////////////////////////////////////////////////////////
+
+struct FrenetStateVector2D
+    : public Eigen::Matrix<RealType, 4, 1, Eigen::DontAlign> {
+  FrenetStateVector2D(void)
+      : Eigen::Matrix<RealType, 4, 1, Eigen::DontAlign>() {}
+  FrenetStateVector2D(const FrenetPoint2D& position,
+                      const FrenetVector2D& velocity) {
+    (*this) << position.l(), position.d(), velocity.l(), velocity.d();
+  }
+  FrenetStateVector2D(const RealType pos_l, const RealType pos_d,
+                      const RealType vel_l, const RealType vel_d) {
+    (*this) << pos_l, pos_d, vel_l, vel_d;
+  }
+
+  using Base = Eigen::Matrix<RealType, 4, 1, Eigen::DontAlign>;
+
+  // This constructor allows you to construct FrenetStateVector2D from Eigen
+  // expressions
+  template <typename OtherDerived>
+  FrenetStateVector2D(const Eigen::MatrixBase<OtherDerived>& other)
+      : Eigen::Matrix<RealType, 4, 1, Eigen::DontAlign>(other) {}
+
+  // This method allows you to assign Eigen expressions to FrenetStateVector2D
+  template <typename OtherDerived>
+  FrenetStateVector2D& operator=(const Eigen::MatrixBase<OtherDerived>& other) {
+    this->Base::operator=(other);
+    return *this;
+  }
+
+  // Copies
+  FrenetPoint2D position() const { return this->head<2>(); }
+  FrenetVector2D velocity() const { return this->tail<2>(); }
+
+  // Non-mutable views
+  const RealType l() const { return (*this)[0]; }
+  const RealType d() const { return (*this)[1]; }
+  const RealType vl() const { return (*this)[2]; }
+  const RealType vd() const { return (*this)[3]; }
+
+  // Mutable views
+  RealType& l() { return (*this)[0]; }
+  RealType& d() { return (*this)[1]; }
+  RealType& vl() { return (*this)[2]; }
+  RealType& vd() { return (*this)[3]; }
+
+  // TODO: make a mutable view on the eigen matrix possible
+  // Eigen::Ref<CartesianVector2D> velocity() { return this->segment<2>(2); }
+};
+
+struct FrenetCovarianceMatrix2D
+    : public Eigen::Matrix<RealType, 2, 2, Eigen::DontAlign> {
+  FrenetCovarianceMatrix2D(void)
+      : Eigen::Matrix<RealType, 2, 2, Eigen::DontAlign>() {}
+  FrenetCovarianceMatrix2D(const RealType ll, const RealType dd,
+                           const RealType ld = 0.0) {
+    (*this) << ll, ld, ld, dd;
+  }
+
+  using Base = Eigen::Matrix<RealType, 2, 2, Eigen::DontAlign>;
+
+  // This constructor allows you to construct FrenetCovarianceMatrix2D from
+  // Eigen expressions
+  template <typename OtherDerived>
+  FrenetCovarianceMatrix2D(const Eigen::MatrixBase<OtherDerived>& other)
+      : Eigen::Matrix<RealType, 2, 2, Eigen::DontAlign>(other) {}
+
+  // This method allows you to assign Eigen expressions to
+  // FrenetCovarianceMatrix2D
+  template <typename OtherDerived>
+  FrenetCovarianceMatrix2D& operator=(
+      const Eigen::MatrixBase<OtherDerived>& other) {
+    this->Base::operator=(other);
+    return *this;
+  }
+
+  // Non-mutable views
+  const RealType ll() const { return (*this)(0, 0); }
+  const RealType dd() const { return (*this)(1, 1); }
+  const RealType ld() const { return (*this)(0, 1); }
+};
+
+struct FrenetStateCovarianceMatrix2D
+    : public Eigen::Matrix<RealType, 4, 4, Eigen::DontAlign> {
+  FrenetStateCovarianceMatrix2D(void)
+      : Eigen::Matrix<RealType, 4, 4, Eigen::DontAlign>() {}
+  FrenetStateCovarianceMatrix2D(const FrenetCovarianceMatrix2D& pos,
+                                const FrenetCovarianceMatrix2D& vel,
+                                const FrenetCovarianceMatrix2D& pos_vel =
+                                    FrenetCovarianceMatrix2D::Zero()) {
+    this->block<2, 2>(0, 0) = pos;
+    this->block<2, 2>(2, 2) = vel;
+    this->block<2, 2>(0, 2) = pos_vel;
+  }
+
+  using Base = Eigen::Matrix<RealType, 4, 4, Eigen::DontAlign>;
+
+  // This constructor allows you to construct FrenetStateCovarianceMatrix2D from
+  // Eigen expressions
+  template <typename OtherDerived>
+  FrenetStateCovarianceMatrix2D(const Eigen::MatrixBase<OtherDerived>& other)
+      : Eigen::Matrix<RealType, 4, 4, Eigen::DontAlign>(other) {}
+
+  // This method allows you to assign Eigen expressions to
+  // FrenetStateCovarianceMatrix2D
+  template <typename OtherDerived>
+  FrenetStateCovarianceMatrix2D& operator=(
+      const Eigen::MatrixBase<OtherDerived>& other) {
+    this->Base::operator=(other);
+    return *this;
+  }
+
+  // Copies
+  FrenetCovarianceMatrix2D position() const { return this->block<2, 2>(0, 0); }
+  FrenetCovarianceMatrix2D velocity() const { return this->block<2, 2>(2, 2); }
+  FrenetCovarianceMatrix2D pos_vel() const { return this->block<2, 2>(0, 2); }
+};
+// /////////////////////////////////////////////////////////////////////////////
+// Frenet state (mean and covariance matrix)
+// /////////////////////////////////////////////////////////////////////////////
+
+class FrenetState2D {
+ public:
+  FrenetState2D(void) : mean_(), cov_mat_() {}
+  FrenetState2D(
+      const FrenetPoint2D& position, const FrenetVector2D& velocity,
+      const FrenetCovarianceMatrix2D& cm_position = FrenetCovarianceMatrix2D(),
+      const FrenetCovarianceMatrix2D& cm_velocity = FrenetCovarianceMatrix2D(),
+      const FrenetCovarianceMatrix2D& cm_pos_vel =
+          FrenetCovarianceMatrix2D::Zero())
+      : mean_(position, velocity),
+        cov_mat_(cm_position, cm_velocity, cm_pos_vel) {}
+  FrenetState2D(const FrenetStateVector2D& mean,
+                const FrenetStateCovarianceMatrix2D& cov_mat)
+      : mean_(mean), cov_mat_(cov_mat) {}
+
+  // Simple getter
+  FrenetPoint2D position() const { return mean_.position(); }
+  const FrenetStateVector2D& mean() const { return mean_; }
+  const FrenetStateCovarianceMatrix2D& covarianceMatrix() const {
+    return cov_mat_;
+  }
+
+  // const PolarStatePtr polarVelocityState();
+
+ private:
+  FrenetStateVector2D mean_;
+  FrenetStateCovarianceMatrix2D cov_mat_;
+
+  // optional polar interpretation of the velocity vector. Will only be
+  // constructed if needed and then cached.
+  // PolarStatePtr polar_velocity_state_;
 };
 
 }  // namespace corridor

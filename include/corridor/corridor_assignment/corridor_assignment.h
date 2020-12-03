@@ -1,6 +1,7 @@
 #pragma once
 
-// #include "situation_analysis/SceneObject.h"
+#include "corridor/basic_types.h"
+#include "corridor/cartesian_types.h"
 #include "corridor/corridor.h"
 #include "corridor/frenet_types.h"
 
@@ -15,9 +16,8 @@ namespace corridor {
 struct CorridorRelatedFeatures {
   // Object features
   FrenetFrame2D frenet_frame;
-  FrenetStateVector2D frenet_state;
-  FrenetStateCovarianceMatrix2D frenet_state_covMat;
-  SceneObjectBoxShape frenet_shape;
+  FrenetState2D frenet_state;
+  BoxDimension box_dimension;
   // Corridor features
   RealType corridor_width;          //< at projection point
   RealType corridor_length;         //< from start to end
@@ -31,8 +31,7 @@ struct CorridorRelatedFeatures {
   CorridorRelatedFeatures(void)
       : frenet_frame(),
         frenet_state(),
-        frenet_state_covMat(),
-        frenet_shape(),
+        box_dimension(),
         corridor_width(-1),
         corridor_length(-1),
         corridor_center_offset(-1) {}
@@ -42,21 +41,23 @@ inline std::ostream& operator<<(std::ostream& os,
                                 const CorridorRelatedFeatures& crf) {
   os << "Corridor Assignment Features\n";
   os << crf.frenet_frame;
-  os << "Frenet State: " << crf.frenet_state.transpose() << "\n";
-  os << crf.frenet_shape;
+  os << "Frenet State: " << crf.frenet_state.mean().transpose() << "\n";
+  os << crf.box_dimension;
   os << "corridor_width: " << crf.corridor_width << "\n";
   os << "corridor_length: " << crf.corridor_length << "\n";
   os << "corridor_center_offset: " << crf.corridor_center_offset << "\n";
   return os;
 };
 
-CorridorRelatedFeatures ComputeCorridorRelatedObjectFeature(
-    const SceneObject& object, const Corridor& corridor);
+// CorridorRelatedFeatures ComputeCorridorRelatedObjectFeature(
+//     const CartesianState2D& cartesian_state,
+//     const BoxDimension& bounding_box_dimension, const Corridor& corridor);
 
-RealType LateralConfidence(const CorridorRelatedFeatures& features);
+// RealType LateralConfidence(const CorridorRelatedFeatures& features);
 
-RealType LongitudinalConfidence(const CorridorRelatedFeatures& features);
+// RealType LongitudinalConfidence(const CorridorRelatedFeatures& features);
 
-RealType ComputeAssignmentConfidence(const CorridorRelatedFeatures& features);
+// RealType ComputeAssignmentConfidence(const CorridorRelatedFeatures&
+// features);
 
 }  // namespace corridor

@@ -9,33 +9,6 @@
 
 namespace corridor {
 
-struct BasicPoint2D : public Eigen::Matrix<RealType, 2, 1, Eigen::DontAlign> {
-  BasicPoint2D(void) : Eigen::Matrix<RealType, 2, 1, Eigen::DontAlign>() {
-    this->fill(0.0);
-  }
-  BasicPoint2D(const RealType x, const RealType y) { (*this) << x, y; }
-
-  typedef Eigen::Matrix<RealType, 2, 1, Eigen::DontAlign> Base;
-
-  // This constructor allows you to construct BasicPoint2D from Eigen
-  // expressions
-  template <typename OtherDerived>
-  BasicPoint2D(const Eigen::MatrixBase<OtherDerived>& other)
-      : Eigen::Matrix<RealType, 2, 1, Eigen::DontAlign>(other) {}
-
-  // This method allows you to assign Eigen expressions to CartesianPoint2D
-  template <typename OtherDerived>
-  BasicPoint2D& operator=(const Eigen::MatrixBase<OtherDerived>& other) {
-    this->Base::operator=(other);
-    return *this;
-  }
-};
-
-/**
- * @brief Vector is a direction, point a position (with respect to a origin)
- */
-using BasicVector2D = BasicPoint2D;
-
 using CartesianPoint2D = BasicPoint2D;
 using CartesianVector2D = BasicVector2D;
 
@@ -43,7 +16,7 @@ using CartesianPoints2D = std::vector<CartesianPoint2D>;
 using CartesianVectors2D = std::vector<CartesianVector2D>;
 
 // /////////////////////////////////////////////////////////////////////////////
-// Cartesian state and covariances
+// Cartesian state vector and covariances
 // /////////////////////////////////////////////////////////////////////////////
 
 struct CartesianStateVector2D
@@ -78,7 +51,7 @@ struct CartesianStateVector2D
 
   // Copy
   CartesianPoint2D position() const { return this->head<2>(); }
-  CartesianPoint2D velocity() const { return this->tail<2>(); }
+  CartesianVector2D velocity() const { return this->tail<2>(); }
 
   // Non-mutable views
   const RealType x() const { return (*this)[0]; }
@@ -158,12 +131,45 @@ struct CartesianStateCovarianceMatrix2D
   CovarianceMatrix2D pos_vel() const { return this->block<2, 2>(0, 2); }
 };
 
+// /////////////////////////////////////////////////////////////////////////////
+// Cartesian state (mean and covariance matrix)
+// /////////////////////////////////////////////////////////////////////////////
+
+class CartesianState2D {
+ public:
+  CartesianState2D(void) : mean_(), cov_mat_() {}
+  CartesianState2D(
+      const CartesianPoint2D& position, const CartesianVector2D& velocity,
+      const CovarianceMatrix2D& cm_position = CovarianceMatrix2D(),
+      const CovarianceMatrix2D& cm_velocity = CovarianceMatrix2D(),
+      const CovarianceMatrix2D& cm_pos_vel = CovarianceMatrix2D::Zero())
+      : mean_(position, velocity),
+        cov_mat_(cm_position, cm_velocity, cm_pos_vel) {}
+
+  // Simple getter
+  CartesianPoint2D position() const { return mean_.position(); }
+  CartesianPoint2D velocity() const { return mean_.velocity(); }
+  const CartesianStateVector2D& mean() const { return mean_; }
+  const CartesianStateCovarianceMatrix2D& covarianceMatrix() const {
+    return cov_mat_;
+  }
+
+ private:
+  CartesianStateVector2D mean_;
+  CartesianStateCovarianceMatrix2D cov_mat_;
+
+  // optional polar interpretation of the velocity vector. Will only be
+  // constructed if and then cached.
+  // PolarStatePtr polar_velocity_state_;
+};
+
 /**
  * @brief Simple 2D object class.
  * Mostly for example purposes of the corridor assignment function
  *
  */
 class CartesianObjectState2D {
+ public:
   CartesianObjectState2D(void)
       : id_(InvalidId), box_dimension_(), state_(), state_cov_mat_() {}
 

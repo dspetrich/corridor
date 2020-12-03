@@ -149,9 +149,9 @@ py::list PolarToCartesianTransformation2D(const cr::RealType radius,
 
 ut::FlatPolarStateAndCovMat2D UnscentedTransformationPolarCoordinate2D(
     const ut::FlatCartesianStateAndCovMat2D& cartesian_state) {
-  ut::StateMeanAndCovarianceMatrix polar_state =
-      ut::UnscentedTransformationPolarCoordinates(Convert(cartesian_state));
-  return Convert(polar_state);
+  cr::StateMeanAndCovarianceMatrix polar_state =
+      ut::UnscentedTransformationPolarCoordinates(ut::Convert(cartesian_state));
+  return ut::Convert(polar_state);
 }
 
 BOOST_PYTHON_MODULE(PYTHON_API_MODULE_NAME) {  // NOLINT
