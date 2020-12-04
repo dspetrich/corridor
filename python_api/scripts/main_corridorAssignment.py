@@ -60,18 +60,18 @@ fig = plt.figure()
 ax = fig.gca(projection='3d')
 
 # Define plain features of the object
-# features = corridor.CorridorAssignmentFeature()
+features = corridor.CorridorAssignmentFeature()
 features.corridor_width = 4
 features.d = 0  # <-- X
 features.sigma_d = 0.5  # <-- variable
 features.obj_width_ratio = 0.5  # <-- variable
 
-# w_c = features.corridor_width
-# x_max = 2*w_c
+w_c = features.corridor_width
+x_max = 2*w_c
 
 # problem parameters
-nd = 100
-ns = 100
+nd = 1000
+ns = 1000
 
 d = np.linspace(-x_max, x_max, nd,)
 sigma_d = np.linspace(0.01, 10, ns,)
@@ -88,7 +88,7 @@ for i in range(nd):
         yy[i, j] = sigma_d[j]
         features.d = d[i]
         features.sigma_d = sigma_d[j]
-        # zz[i, j] = corridor.LateralConfidence(features)
+        zz[i, j] = corridor.LateralConfidence(features)
 
 surf = ax.plot_surface(xx, yy, zz, cmap=cm.jet,
                        linewidth=0, antialiased=False)

@@ -17,7 +17,14 @@ struct CorridorRelatedFeatures {
   // Object features
   FrenetFrame2D frenet_frame;
   FrenetState2D frenet_state;
+
   BoxDimension box_dimension;
+
+  // TODO: use uncertainty value once the long and lat projection uncertainty is
+  // needed (UT)
+  RealType longitudinal_box_projection;
+  RealType lateral_box_projection;
+
   // Corridor features
   RealType corridor_width;          //< at projection point
   RealType corridor_length;         //< from start to end
@@ -42,22 +49,22 @@ inline std::ostream& operator<<(std::ostream& os,
   os << "Corridor Assignment Features\n";
   os << crf.frenet_frame;
   os << "Frenet State: " << crf.frenet_state.mean().transpose() << "\n";
-  os << crf.box_dimension;
+  os << "box projections (lat,long): " << crf.lateral_box_projection << ", "
+     << crf.longitudinal_box_projection << "\n";
   os << "corridor_width: " << crf.corridor_width << "\n";
   os << "corridor_length: " << crf.corridor_length << "\n";
   os << "corridor_center_offset: " << crf.corridor_center_offset << "\n";
   return os;
 };
 
-// CorridorRelatedFeatures ComputeCorridorRelatedObjectFeature(
-//     const CartesianState2D& cartesian_state,
-//     const BoxDimension& bounding_box_dimension, const Corridor& corridor);
+CorridorRelatedFeatures ComputeCorridorRelatedObjectFeature(
+    const CartesianState2D& cartesian_state,
+    const BoxDimension& bounding_box_dimension, const Corridor& corridor);
 
-// RealType LateralConfidence(const CorridorRelatedFeatures& features);
+RealType LateralConfidence(const CorridorRelatedFeatures& features);
 
-// RealType LongitudinalConfidence(const CorridorRelatedFeatures& features);
+RealType LongitudinalConfidence(const CorridorRelatedFeatures& features);
 
-// RealType ComputeAssignmentConfidence(const CorridorRelatedFeatures&
-// features);
+RealType ComputeAssignmentConfidence(const CorridorRelatedFeatures& features);
 
 }  // namespace corridor

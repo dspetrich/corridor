@@ -10,7 +10,6 @@ class UnscentedTransformationTest : public ::testing::Test {
  protected:
   void SetUp() override {
     initial_state_ = StateMeanAndCovarianceMatrix(3);
-    sigma_points_ = MerweScaledSigmaPoints(3);
     initial_state_.mean << 5, 2.2, M_PI_2;
     initial_state_.covMat(0, 0) = 0.5;
     initial_state_.covMat(1, 1) = 0.1;
@@ -19,7 +18,7 @@ class UnscentedTransformationTest : public ::testing::Test {
 
  public:
   StateMeanAndCovarianceMatrix initial_state_;
-  MerweScaledSigmaPoints sigma_points_;
+  MerweScaledSigmaPoints<3> sigma_points_;
 };
 
 TEST_F(UnscentedTransformationTest, initialization) {
@@ -52,18 +51,16 @@ TEST_F(UnscentedTransformationTest, UT_boxTransformation) {
     transformed_sigmas(2, i) = sigmas(2, i);
   }
 
-  StateMeanAndCovarianceMatrix transformed_state =
-      EstimateStateMeanAndCovarianceMatrix(transformed_sigmas,
-                                           sigma_points_.weightsMean(),
-                                           sigma_points_.weightsCovMat(), 2);
+  StateMeanAndCovarianceMatrix transformed_state(3);
 
-  std::cout << "/* transformed_state */" << std::endl;
-  std::cout << transformed_state.mean << std::endl;
+  EstimateStateMeanAndCovarianceMatrix(
+      transformed_sigmas, sigma_points_.weightsMean(),
+      sigma_points_.weightsCovMat(), transformed_state.mean,
+      transformed_state.covMat, 2);
 
-  std::cout << "/* transformed_covMat */" << std::endl;
-  std::cout << transformed_state.covMat << std::endl;
+  // std::cout << "/* transformed_state */" << std::endl;
+  // std::cout << transformed_state.mean << std::endl;
 
-  // Nice transformation function, like the projection of a box to the frame
-  // axes
-  //
+  // std::cout << "/* transformed_covMat */" << std::endl;
+  // std::cout << transformed_state.covMat << std::endl;
 }

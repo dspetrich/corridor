@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "corridor/cubic_spline/cubic_spline_types.h"
-#include "corridor/unscented_transformation/unscented_transformation.h"
+#include "corridor/unscented_transformation/polar_coordinate_transformation.h"
 
 using namespace corridor;
 
@@ -91,9 +91,16 @@ FrenetStateCovarianceMatrix2D FrenetFrame2D::FromCartesianStateCovarianceMatrix(
   const auto frenet_pos_vel_covMat =
       rotMat_C2F_ * posvel_covMat * rotMat_C2F_.transpose();
 
-  return FrenetStateCovarianceMatrix2D(pos_covMat, vel_covMat,
+  return FrenetStateCovarianceMatrix2D(frenet_pos_covMat, frenet_vel_covMat,
                                        frenet_pos_vel_covMat);
 };
+
+FrenetState2D FrenetFrame2D::FromCartesianState(
+    const CartesianState2D& cartesian_state, const bool moving_frenet_frame) {
+  return {
+      FromCartesianStateVector(cartesian_state.mean()),
+      FromCartesianStateCovarianceMatrix(cartesian_state.covarianceMatrix())};
+}
 
 // /////////////////////////////////////////////////////////////////////////////
 // Frenet Polyline
@@ -146,13 +153,28 @@ RealType FrenetPolyline::deviationAt(const RealType query_l) const {
 // Frenet state (mean and covariance matrix)
 // /////////////////////////////////////////////////////////////////////////////
 
-// const PolarStatePtr FrenetState2D::polarVelocityState() {
-//   if (polar_velocity_state_ != nullptr) {
-//     // if polar velocity is already calculated return value.
-//     return polar_velocity_state_;
-//   }
+UncertainValue FrenetState2D::abs_velocity() {
+  const auto& polar_velocity_state = polarVelocityState();
+  return polar_velocity_state->abs_value();
+};
+UncertainValue FrenetState2D::orientation() {
+  const auto& polar_velocity_state = polarVelocityState();
+  return polar_velocity_state->orientation();
+};
 
-//   // Polar velocity is not yet set, calculate and return it.
+const PolarStatePtr FrenetState2D::polarVelocityState() {
+  if (polar_velocity_state_ != nullptr) {
+    // if polar velocity is already calculated return pointer.
+    return polar_velocity_state_;
+  }
 
-//   return polar_velocity_state_;
-// };
+  // Initialize shared ptr
+  polar_velocity_state_ = std::make_shared<PolarState2D>();
+
+  // Polar velocity is not yet set, calculate and return it.
+  unscented_transformation::ToPolarCoordinates2D(
+      mean_.velocity(), cov_mat_.velocity(), &polar_velocity_state_->mean,
+      &polar_velocity_state_->cov_mat);
+
+  return polar_velocity_state_;
+};

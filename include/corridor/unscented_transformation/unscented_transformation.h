@@ -10,17 +10,27 @@
 namespace corridor {
 namespace unscented_transformation {
 
+template <typename SigmaPtsMatrix, typename WeightVector, typename StateVector,
+          typename StateCovMatrix>
 void EstimateStateMeanAndCovarianceMatrix(
-    const Eigen::MatrixXd& transformed_sigma_pts,
-    const Eigen::VectorXd& weights_mean, const Eigen::VectorXd& weights_cov_mat,
-    Eigen::VectorXd* resulting_mean, Eigen::MatrixXd* resulting_cov_mat,
+    const Eigen::MatrixBase<SigmaPtsMatrix>& transformed_sigma_pts,
+    const Eigen::MatrixBase<WeightVector>& weights_mean,
+    const Eigen::MatrixBase<WeightVector>& weights_cov_mat,
+    Eigen::MatrixBase<StateVector> const& resulting_mean,
+    Eigen::MatrixBase<StateCovMatrix> const& resulting_cov_mat,
     const int angular_value_index = -1) {
-  // Reset results
-  resulting_mean->fill(0.0);
-  resulting_cov_mat->fill(0.0);
+  // "HACK" modifiable eigen-based paramters need to be passed as const
+  // reference. Here, the constness is casted away.
+  // -> https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
+  Eigen::MatrixBase<StateVector>& mean =
+      const_cast<Eigen::MatrixBase<StateVector>&>(resulting_mean);
 
-  auto& mean = (*resulting_mean);
-  auto& cov_mat = (*resulting_cov_mat);
+  Eigen::MatrixBase<StateCovMatrix>& cov_mat =
+      const_cast<Eigen::MatrixBase<StateCovMatrix>&>(resulting_cov_mat);
+
+  // Reset results
+  mean.fill(0.0);
+  cov_mat.fill(0.0);
 
   // Initialize state vector and covariance matrix
   const int state_dim = transformed_sigma_pts.rows();
@@ -63,18 +73,6 @@ void EstimateStateMeanAndCovarianceMatrix(
     }
     cov_mat += weights_cov_mat(i) * x_diff * x_diff.transpose();
   }
-};
-
-StateMeanAndCovarianceMatrix EstimateStateMeanAndCovarianceMatrix(
-    const Eigen::MatrixXd& transformed_sigma_pts,
-    const Eigen::VectorXd& weights_mean, const Eigen::VectorXd& weights_cov_mat,
-    const int angular_value_index = -1) {
-  // Resulting state
-  StateMeanAndCovarianceMatrix state(transformed_sigma_pts.rows());
-  EstimateStateMeanAndCovarianceMatrix(transformed_sigma_pts, weights_mean,
-                                       weights_cov_mat, &state.mean,
-                                       &state.covMat, angular_value_index);
-  return state;
 };
 
 }  // namespace unscented_transformation

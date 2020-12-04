@@ -267,13 +267,30 @@ struct PolarCovarianceMatrix2D
   const RealType cov_value_orientation() const { return (*this)(0, 1); }
 };
 
-// struct PolarState2D : public
+struct PolarState2D {
+  PolarVector2D mean;
+  PolarCovarianceMatrix2D cov_mat;
 
-// struct PolarState2D {
-//   PolarVector2D mean;
-//   PolarCovarianceMatrix2D cov_mat;
-// };
+  // Easy access functions:
+  // a) marginalization
+  UncertainValue abs_value() const {
+    return {mean.abs_value(), cov_mat.var_abs_value()};
+  }
+  UncertainValue orientation() const {
+    return {mean.orientation(), cov_mat.var_orientation()};
+  }
+};
 
-// using PolarStatePtr = std::shared_ptr<PolarState2D>;
+using PolarStatePtr = std::shared_ptr<PolarState2D>;
+
+// Introspection
+inline std::ostream &operator<<(std::ostream &os, const PolarStatePtr state) {
+  using namespace std;
+  os << "Polar State Vector (|r|, phi): ";
+  os << state->mean.transpose() << "\n";
+  os << "Polar State CovMat:\n";
+  os << state->cov_mat << "\n";
+  return os;
+};
 
 }  // namespace corridor

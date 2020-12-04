@@ -71,7 +71,7 @@ polar_cov_0 = np.cov(initial_polar_data)
 
 # Initial subplot
 ax_init_polar.plot(
-    initial_polar_data[0, :], initial_polar_data[1, :], 'b.', alpha=0.3)
+    initial_polar_data[0, :], initial_polar_data[1, :], 'g.', alpha=0.3)
 ax_init_polar.plot(polar_mean_0[0], polar_mean_0[1], 'ro')
 confidence_ellipse(ax_init_polar, polar_mean_0, polar_cov_0,
                    n_std, facecolor='none', zorder=10, edgecolor='r')
@@ -90,7 +90,7 @@ cart_data = np.stack((x_list, y_list), axis=0)
 cart_mean = np.mean(cart_data, axis=1)
 cart_cov = np.cov(cart_data)
 
-ax_cart.plot(x_list, y_list, 'b.', alpha=0.3)
+ax_cart.plot(x_list, y_list, 'g.', alpha=0.3)
 ax_cart.plot(cart_mean[0], cart_mean[1], 'ro')
 confidence_ellipse(ax_cart, cart_mean, cart_cov,
                    n_std, facecolor='none', zorder=10, edgecolor='r')
@@ -109,7 +109,7 @@ polar_data = np.stack((r_list, phi_list), axis=0)
 polar_mean = np.mean(polar_data, axis=1)
 polar_cov = np.cov(polar_data)
 
-ax_polar.plot(r_list, phi_list, 'b.', alpha=0.3)
+ax_polar.plot(r_list, phi_list, 'g.', alpha=0.3)
 ax_polar.plot(polar_mean[0], polar_mean[1], 'ro')
 confidence_ellipse(ax_polar, polar_mean, polar_cov,
                    n_std, facecolor='none', zorder=10, edgecolor='r')
@@ -129,9 +129,9 @@ ut_polar_mean = np.array([polar_state.r, polar_state.phi])
 ut_polar_cov = np.array([[polar_state.var_r, polar_state.cov_rphi], [
     polar_state.cov_rphi, polar_state.var_phi]])
 
-ax_polar.plot(ut_polar_mean[0], ut_polar_mean[1], 'go')
+ax_polar.plot(ut_polar_mean[0], ut_polar_mean[1], 'bo')
 confidence_ellipse(ax_polar, ut_polar_mean, ut_polar_cov,
-                   n_std, facecolor='none', zorder=10, edgecolor='g', linewidth=2)
+                   n_std, facecolor='none', zorder=10, edgecolor='b', linewidth=2)
 
 ax_cart.axis('equal')
 

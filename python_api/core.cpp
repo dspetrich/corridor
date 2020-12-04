@@ -7,6 +7,7 @@
 #include "corridor/cubic_spline/cubic_spline_coefficients.h"
 #include "corridor/cubic_spline/cubic_spline_utilities.h"
 #include "corridor/frenet_types.h"
+#include "corridor_assignment_wrapper.hpp"
 #include "unscented_transformation_wrapper.hpp"
 
 namespace py = boost::python;
@@ -124,56 +125,58 @@ py::list ConstructFrenetFrames(const cr::RealType target_x,
   return to_py_list(frenet_frames);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
-// Uncertainty Transformation
-// /////////////////////////////////////////////////////////////////////////////
-
-py::list CartesianToPolarTransformation2D(const cr::RealType x1,
-                                          const cr::RealType x2) {
-  Eigen::Vector2d polar_vector = ut::CartesianToPolarTransformation2D({x1, x2});
-  py::list polar_coordinates;
-  polar_coordinates.append(polar_vector(0));
-  polar_coordinates.append(polar_vector(1));
-  return polar_coordinates;
-}
-
-py::list PolarToCartesianTransformation2D(const cr::RealType radius,
-                                          const cr::RealType phi) {
-  Eigen::Vector2d cartesian_vector =
-      ut::PolarToCartesianTransformation2D({radius, phi});
-  py::list cartesian_coordinates;
-  cartesian_coordinates.append(cartesian_vector(0));
-  cartesian_coordinates.append(cartesian_vector(1));
-  return cartesian_coordinates;
-}
-
-ut::FlatPolarStateAndCovMat2D UnscentedTransformationPolarCoordinate2D(
-    const ut::FlatCartesianStateAndCovMat2D& cartesian_state) {
-  cr::StateMeanAndCovarianceMatrix polar_state =
-      ut::UnscentedTransformationPolarCoordinates(ut::Convert(cartesian_state));
-  return ut::Convert(polar_state);
-}
-
 BOOST_PYTHON_MODULE(PYTHON_API_MODULE_NAME) {  // NOLINT
+
+  // ///////////////////////////////////////////////////////////////////////////
+  // Cubic Spline
+  // ///////////////////////////////////////////////////////////////////////////
   def("create_spline_params", &CreateSplineParams);
   def("construct_frenet_frames", &ConstructFrenetFrames);
 
-  def("cartesian_to_polar_2d", &CartesianToPolarTransformation2D);
-  def("polar_to_cartesian_2d", &PolarToCartesianTransformation2D);
+  // ///////////////////////////////////////////////////////////////////////////
+  // Polar Uncertainty Transformation Wrapper
+  // ///////////////////////////////////////////////////////////////////////////
+
+  py::class_<FlatCartesianStateAndCovMat2D>("FlatCartesianStateAndCovMat2D")
+      .def_readwrite("x", &FlatCartesianStateAndCovMat2D::x)
+      .def_readwrite("y", &FlatCartesianStateAndCovMat2D::y)
+      .def_readwrite("var_x", &FlatCartesianStateAndCovMat2D::var_x)
+      .def_readwrite("var_y", &FlatCartesianStateAndCovMat2D::var_y)
+      .def_readwrite("cov_xy", &FlatCartesianStateAndCovMat2D::cov_xy);
+
+  py::class_<FlatPolarStateAndCovMat2D>("FlatPolarStateAndCovMat2D")
+      .def_readwrite("r", &FlatPolarStateAndCovMat2D::r)
+      .def_readwrite("phi", &FlatPolarStateAndCovMat2D::phi)
+      .def_readwrite("var_r", &FlatPolarStateAndCovMat2D::var_r)
+      .def_readwrite("var_phi", &FlatPolarStateAndCovMat2D::var_phi)
+      .def_readwrite("cov_rphi", &FlatPolarStateAndCovMat2D::cov_rphi);
+
+  def("cartesian_to_polar_2d", &pyCartesianToPolarTransformation2D);
+  def("polar_to_cartesian_2d", &pyPolarToCartesianTransformation2D);
   boost::python::def("ut_cartesian_to_polar_2d",
                      &UnscentedTransformationPolarCoordinate2D);
 
-  py::class_<ut::FlatCartesianStateAndCovMat2D>("FlatCartesianStateAndCovMat2D")
-      .def_readwrite("x", &ut::FlatCartesianStateAndCovMat2D::x)
-      .def_readwrite("y", &ut::FlatCartesianStateAndCovMat2D::y)
-      .def_readwrite("var_x", &ut::FlatCartesianStateAndCovMat2D::var_x)
-      .def_readwrite("var_y", &ut::FlatCartesianStateAndCovMat2D::var_y)
-      .def_readwrite("cov_xy", &ut::FlatCartesianStateAndCovMat2D::cov_xy);
+  // ///////////////////////////////////////////////////////////////////////////
+  // Corridor Assignment Wrapper
+  // ///////////////////////////////////////////////////////////////////////////
+  py::class_<FlatCorridorRelatedFeatures>("CorridorAssignmentFeature")
+      .def_readwrite("l", &FlatCorridorRelatedFeatures::l)
+      .def_readwrite("d", &FlatCorridorRelatedFeatures::d)
+      .def_readwrite("sigma_l", &FlatCorridorRelatedFeatures::sigma_l)
+      .def_readwrite("sigma_d", &FlatCorridorRelatedFeatures::sigma_d)
+      .def_readwrite("obj_width_ratio",
+                     &FlatCorridorRelatedFeatures::obj_width_ratio)
+      .def_readwrite("obj_length_ratio",
+                     &FlatCorridorRelatedFeatures::obj_length_ratio)
+      .def_readwrite("corridor_width",
+                     &FlatCorridorRelatedFeatures::corridor_width)
+      .def_readwrite("corridor_length",
+                     &FlatCorridorRelatedFeatures::corridor_length);
 
-  py::class_<ut::FlatPolarStateAndCovMat2D>("FlatPolarStateAndCovMat2D")
-      .def_readwrite("r", &ut::FlatPolarStateAndCovMat2D::r)
-      .def_readwrite("phi", &ut::FlatPolarStateAndCovMat2D::phi)
-      .def_readwrite("var_r", &ut::FlatPolarStateAndCovMat2D::var_r)
-      .def_readwrite("var_phi", &ut::FlatPolarStateAndCovMat2D::var_phi)
-      .def_readwrite("cov_rphi", &ut::FlatPolarStateAndCovMat2D::cov_rphi);
+  //! callable functions in Python
+  py::def("LateralConfidence", &LateralConfidence);
+  py::def("LongitudinalConfidence", &LongitudinalConfidence);
+
+  py::def("evaluateIntegralLineWidthGaussian",
+          &evaluateIntegralLineWidthGaussian);
 }

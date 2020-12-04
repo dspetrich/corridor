@@ -78,3 +78,54 @@ TEST_F(FrenetFrameTest, Conversion) {  // NOLINT
   EXPECT_FLOAT_EQ(frenet_vector.l(), 3.0);
   EXPECT_FLOAT_EQ(frenet_vector.d(), 2.0);
 }
+
+TEST_F(FrenetFrameTest, testFrenetStateConversion) {  // NOLINT
+
+  const CartesianPoint2D position(5.0, 4.0);
+  const CartesianVector2D velocity(3.0, 5.0);
+  const CovarianceMatrix2D cm_position(1.0, 1.5);
+  const CovarianceMatrix2D cm_velocity(2.0, 3.0);
+
+  CartesianState2D cartesian_state(position, velocity, cm_position,
+                                   cm_velocity);
+  FrenetState2D frenet_state =
+      frenet_frame_.FromCartesianState(cartesian_state);
+
+  EXPECT_FLOAT_EQ(frenet_state.position().l(), 15.34);
+  EXPECT_FLOAT_EQ(frenet_state.position().d(), 1.0);
+  EXPECT_FLOAT_EQ(frenet_state.velocity().l(), 3.0);
+  EXPECT_FLOAT_EQ(frenet_state.velocity().d(), 5.0);
+
+  // Since the Frenet frame shares the same axes as the cartesian frame, the
+  // covariances are identical
+  EXPECT_FLOAT_EQ(frenet_state.covarianceMatrix().position().ll(),
+                  cm_position.xx());
+  EXPECT_FLOAT_EQ(frenet_state.covarianceMatrix().position().dd(),
+                  cm_position.yy());
+  EXPECT_FLOAT_EQ(frenet_state.covarianceMatrix().position().ld(),
+                  cm_position.xy());
+
+  EXPECT_FLOAT_EQ(frenet_state.covarianceMatrix().velocity().ll(),
+                  cm_velocity.xx());
+  EXPECT_FLOAT_EQ(frenet_state.covarianceMatrix().velocity().dd(),
+                  cm_velocity.yy());
+  EXPECT_FLOAT_EQ(frenet_state.covarianceMatrix().velocity().ld(),
+                  cm_velocity.xy());
+
+  const PolarStatePtr polar_vel_state = frenet_state.polarVelocityState();
+
+  const auto abs_velocity = frenet_state.polarVelocityState()->mean.abs_value();
+  const auto orientation =
+      frenet_state.polarVelocityState()->mean.orientation();
+
+  EXPECT_FLOAT_EQ(abs_velocity, 6.02515);
+  EXPECT_FLOAT_EQ(orientation, 1.0169548);
+
+  EXPECT_FLOAT_EQ(frenet_state.polarVelocityState()->cov_mat.var_abs_value(),
+                  2.8107188);
+  EXPECT_FLOAT_EQ(frenet_state.polarVelocityState()->cov_mat.var_orientation(),
+                  0.0669813);
+  EXPECT_FLOAT_EQ(
+      frenet_state.polarVelocityState()->cov_mat.cov_value_orientation(),
+      0.0703615);
+}

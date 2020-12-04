@@ -26,13 +26,12 @@ Eigen::Vector2d PolarToCartesianTransformation2D(
   return cartesian_vector;
 }
 
-void ToPolarUnscentedTransformation2D(const Eigen::Vector2d& initial_x,
-                                      const Eigen::Matrix2d& initial_P,
-                                      PolarVector2D* resulting_x,
-                                      PolarCovarianceMatrix2D* resulting_P) {
+void ToPolarCoordinates2D(const Eigen::Vector2d& initial_x,
+                          const Eigen::Matrix2d& initial_P,
+                          PolarVector2D* resulting_x,
+                          PolarCovarianceMatrix2D* resulting_P) {
   // State tranformation: vel_x, vel_y -> abs_vel, theta
-  MerweScaledSigmaPoints sigma_pts_generator(2);
-
+  MerweScaledSigmaPoints<2> sigma_pts_generator;
   const auto& sigmas =
       sigma_pts_generator.generateSigmaPoints(initial_x, initial_P);
 
@@ -42,13 +41,30 @@ void ToPolarUnscentedTransformation2D(const Eigen::Vector2d& initial_x,
     transformed_sigmas.col(i) = CartesianToPolarTransformation2D(sigmas.col(i));
   }
 
-  BasicPoint2D mean;
-  Eigen::MatrixXd cov_mat(2, 2);
   EstimateStateMeanAndCovarianceMatrix(
       transformed_sigmas, sigma_pts_generator.weightsMean(),
-      sigma_pts_generator.weightsCovMat(), &mean, &cov_mat, 1);
+      sigma_pts_generator.weightsCovMat(), (*resulting_x), (*resulting_P), 1);
+}
 
-  (*resulting_x) = mean;
+void FromPolarCoordinates2D(const PolarVector2D& initial_x,
+                            const PolarCovarianceMatrix2D& initial_P,
+                            Eigen::Vector2d* resulting_x,
+                            Eigen::Vector2d* resulting_P) {
+  // State tranformation: vel_x, vel_y -> abs_vel, theta
+  MerweScaledSigmaPoints<2> sigma_pts_generator;
+
+  const auto& sigmas =
+      sigma_pts_generator.generateSigmaPoints(initial_x, initial_P);
+
+  // Transformation function
+  Eigen::MatrixXd transformed_sigmas(initial_x.rows(), sigmas.cols());
+  for (int i = 0; i < sigmas.cols(); i++) {
+    transformed_sigmas.col(i) = PolarToCartesianTransformation2D(sigmas.col(i));
+  }
+
+  EstimateStateMeanAndCovarianceMatrix(
+      transformed_sigmas, sigma_pts_generator.weightsMean(),
+      sigma_pts_generator.weightsCovMat(), (*resulting_x), (*resulting_P), 1);
 }
 
 }  // namespace unscented_transformation

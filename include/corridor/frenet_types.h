@@ -92,6 +92,7 @@ inline std::ostream& operator<<(std::ostream& os, const FrenetBase2D& fb) {
 };
 
 // Forward declaration
+class FrenetState2D;
 struct FrenetStateVector2D;
 struct FrenetStateCovarianceMatrix2D;
 
@@ -152,6 +153,9 @@ class FrenetFrame2D {
   FrenetStateCovarianceMatrix2D FromCartesianStateCovarianceMatrix(
       const CartesianStateCovarianceMatrix2D& state_vector_covariance_matrix,
       const bool moving_frenet_frame = false) const;
+
+  FrenetState2D FromCartesianState(const CartesianState2D& cartesian_state,
+                                   const bool moving_frenet_frame = false);
 
   const FrenetBase2D& frenet_base() const { return frenet_base_; }
   const CartesianPoint2D& origin() const { return origin_; }
@@ -298,7 +302,13 @@ struct FrenetStateVector2D
     return *this;
   }
 
+  // Views
+  // const Eigen::Ref<const FrenetPoint2D> position() const {
+  //   return static_cast<FrenetPoint2D>(this->head<2>());
+  // }
+
   // Copies
+  // TODO: make non-mutable view to the block operation
   FrenetPoint2D position() const { return this->head<2>(); }
   FrenetVector2D velocity() const { return this->tail<2>(); }
 
@@ -361,12 +371,24 @@ struct FrenetStateCovarianceMatrix2D
     this->block<2, 2>(0, 0) = pos;
     this->block<2, 2>(2, 2) = vel;
     this->block<2, 2>(0, 2) = pos_vel;
+    this->block<2, 2>(2, 0) = pos_vel.transpose();
   }
+  FrenetStateCovarianceMatrix2D(const RealType ll, const RealType dd,
+                                const RealType vlvl, const RealType vdvd,
+                                const RealType ld = 0.0,
+                                const RealType vlvd = 0.0,
+                                const RealType lvl = 0.0,
+                                const RealType lvd = 0.0,
+                                const RealType dvd = 0.0)
+      : FrenetStateCovarianceMatrix2D(
+            FrenetCovarianceMatrix2D(ll, dd, ld),
+            FrenetCovarianceMatrix2D(vlvl, vdvd, vlvd),
+            FrenetCovarianceMatrix2D(lvl, dvd, lvd)) {}
 
   using Base = Eigen::Matrix<RealType, 4, 4, Eigen::DontAlign>;
 
-  // This constructor allows you to construct FrenetStateCovarianceMatrix2D from
-  // Eigen expressions
+  // This constructor allows you to construct
+  // FrenetStateCovarianceMatrix2D from Eigen expressions
   template <typename OtherDerived>
   FrenetStateCovarianceMatrix2D(const Eigen::MatrixBase<OtherDerived>& other)
       : Eigen::Matrix<RealType, 4, 4, Eigen::DontAlign>(other) {}
@@ -384,6 +406,15 @@ struct FrenetStateCovarianceMatrix2D
   FrenetCovarianceMatrix2D position() const { return this->block<2, 2>(0, 0); }
   FrenetCovarianceMatrix2D velocity() const { return this->block<2, 2>(2, 2); }
   FrenetCovarianceMatrix2D pos_vel() const { return this->block<2, 2>(0, 2); }
+
+  // Non-mutable views
+  const RealType ll() const { return (*this)(0, 0); }
+  const RealType dd() const { return (*this)(1, 1); }
+  const RealType ld() const { return (*this)(0, 1); }
+
+  const RealType vlvl() const { return (*this)(2, 2); }
+  const RealType vdvd() const { return (*this)(3, 3); }
+  const RealType vlvd() const { return (*this)(2, 3); }
 };
 // /////////////////////////////////////////////////////////////////////////////
 // Frenet state (mean and covariance matrix)
@@ -405,13 +436,25 @@ class FrenetState2D {
       : mean_(mean), cov_mat_(cov_mat) {}
 
   // Simple getter
+  RealType l() const { return mean_.l(); }
+  RealType d() const { return mean_.d(); }
+  RealType vl() const { return mean_.vl(); }
+  RealType vd() const { return mean_.vd(); }
+
   FrenetPoint2D position() const { return mean_.position(); }
+  FrenetPoint2D velocity() const { return mean_.velocity(); }
+  UncertainValue abs_velocity();
+  UncertainValue orientation();
+
   const FrenetStateVector2D& mean() const { return mean_; }
   const FrenetStateCovarianceMatrix2D& covarianceMatrix() const {
     return cov_mat_;
   }
 
-  // const PolarStatePtr polarVelocityState();
+  const PolarStatePtr polarVelocityState();
+
+  // Introspection
+  friend std::ostream& operator<<(std::ostream& os, const FrenetState2D& state);
 
  private:
   FrenetStateVector2D mean_;
@@ -419,7 +462,20 @@ class FrenetState2D {
 
   // optional polar interpretation of the velocity vector. Will only be
   // constructed if needed and then cached.
-  // PolarStatePtr polar_velocity_state_;
+  PolarStatePtr polar_velocity_state_;
+};
+
+// Introspection
+inline std::ostream& operator<<(std::ostream& os, const FrenetState2D& state) {
+  using namespace std;
+  os << "Frenet State Vector: ";
+  os << state.mean_.transpose() << "\n";
+  os << "Frenet State CovMat:\n";
+  os << state.cov_mat_ << "\n";
+  if (state.polar_velocity_state_ != nullptr) {
+    os << state.polar_velocity_state_;
+  }
+  return os;
 };
 
 }  // namespace corridor
