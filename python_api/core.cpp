@@ -174,9 +174,12 @@ BOOST_PYTHON_MODULE(PYTHON_API_MODULE_NAME) {  // NOLINT
                      &FlatCorridorRelatedFeatures::corridor_length);
 
   //! callable functions in Python
-  py::def("LateralConfidence", &LateralConfidence);
-  py::def("LongitudinalConfidence", &LongitudinalConfidence);
+  py::def("LateralAssignmentConfidence", &LateralAssignmentConfidence);
+  py::def("LongitudinalAssignmentConfidence",
+          &LongitudinalAssignmentConfidence);
 
   py::def("evaluateIntegralLineWidthGaussian",
           &evaluateIntegralLineWidthGaussian);
+
+  py::def("MovingConfidence", &MovingConfidence);
 }

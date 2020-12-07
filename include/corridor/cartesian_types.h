@@ -147,11 +147,25 @@ class CartesianState2D {
         cov_mat_(cm_position, cm_velocity, cm_pos_vel) {}
 
   // Simple getter
+  RealType x() const { return mean_.x(); }
+  RealType y() const { return mean_.y(); }
+  RealType vx() const { return mean_.vx(); }
+  RealType vy() const { return mean_.vy(); }
+
   CartesianPoint2D position() const { return mean_.position(); }
   CartesianPoint2D velocity() const { return mean_.velocity(); }
   const CartesianStateVector2D& mean() const { return mean_; }
   const CartesianStateCovarianceMatrix2D& covarianceMatrix() const {
     return cov_mat_;
+  }
+
+  UncertainValue abs_velocity() {
+    const auto& polar_velocity_state = getPolarVelocityStatePtr();
+    return polar_velocity_state->abs_value();
+  }
+  UncertainValue orientation() {
+    const auto& polar_velocity_state = getPolarVelocityStatePtr();
+    return polar_velocity_state->orientation();
   }
 
  private:
@@ -160,7 +174,8 @@ class CartesianState2D {
 
   // optional polar interpretation of the velocity vector. Will only be
   // constructed if and then cached.
-  // PolarStatePtr polar_velocity_state_;
+  const PolarStatePtr getPolarVelocityStatePtr();
+  PolarStatePtr polar_velocity_state_;
 };
 
 /**
@@ -186,7 +201,7 @@ class CartesianObjectState2D {
     // Radius of the box, with the uncertainty of the position
     UncertainValue radius = box_dimension_.enclosingCircleRadius();
     const RealType position_variance = state_cov_mat_.position().trace();
-    radius.variance += position_variance;
+    radius.standard_deviation += std::sqrt(position_variance);
     return radius;
   }
 
@@ -201,7 +216,7 @@ class CartesianObjectState2D {
   AlignedBoundingBox2D boundingBox(const RealType sigma_band = 1e-12) const {
     const UncertainValue radius = occupancyRadius();
     const RealType delta_value =
-        M_SQRT1_2 * (radius.value + sigma_band * radius.standardDeviation());
+        M_SQRT1_2 * (radius.value + sigma_band * radius.standard_deviation);
     const CartesianPoint2D delta(delta_value, delta_value);
     AlignedBoundingBox2D abb;
     abb.min() = state_.position() - delta;

@@ -129,7 +129,7 @@ for s in sigma:
     for x in x_range:
         features.d = x
         # for s in sigma:
-        lat_conf.append(corridor.LateralConfidence(features))
+        lat_conf.append(corridor.LateralAssignmentConfidence(features))
     ax2.plot(x_range, lat_conf)
 
 # ##############################################################################
@@ -153,7 +153,7 @@ for w in w_o_ratio:
     for x in x_range:
         features.d = x
         # for s in sigma:
-        lat_conf.append(corridor.LateralConfidence(features))
+        lat_conf.append(corridor.LateralAssignmentConfidence(features))
     ax4.plot(x_range, lat_conf)
     lx, ly = create_assignment_function(w_c, w_c*w, x_max)
     ax3.plot(lx, ly)

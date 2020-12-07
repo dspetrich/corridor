@@ -56,18 +56,19 @@ inline RealType constrainAngle(RealType angle) {
   return angle - M_PI;
 }
 
-// Can be easily templated
+// TODO: template!
 struct UncertainValue {
-  UncertainValue(const RealType _value = 0.0, const RealType _variance = 1e-12)
-      : value(_value), variance(_variance) {}
+  UncertainValue(const RealType _value = 0.0,
+                 const RealType _standard_deviation = 1e-12)
+      : value(_value), standard_deviation(_standard_deviation) {}
 
-  RealType standardDeviation() const { return std::sqrt(variance); }
-  RealType value;     // mean value
-  RealType variance;  // variance = standardDeviation^2
+  RealType variance() const { return standard_deviation * standard_deviation; }
+  RealType value;  // mean value
+  RealType standard_deviation;
 };
 // introspection
 inline std::ostream &operator<<(std::ostream &os, const UncertainValue &uv) {
-  os << "value = " << uv.value << "; variance = " << uv.variance << "\n";
+  os << "value = " << uv.value << "; variance = " << uv.variance() << "\n";
   return os;
 };
 
@@ -132,10 +133,10 @@ struct BoxDimension {
 
     // Assuming length and width are uncorrelated
     const RealType variance =
-        0.25 * ((squared_length / squared_value) * length.variance +
-                (squared_width / squared_value) * width.variance);
+        0.25 * ((squared_length / squared_value) * length.variance() +
+                (squared_width / squared_value) * width.variance());
 
-    return {std::sqrt(squared_value), variance};
+    return {std::sqrt(squared_value), std::sqrt(variance)};
   }
 };
 // introspection
@@ -211,7 +212,7 @@ inline std::ostream &operator<<(std::ostream &os,
 struct PolarVector2D : public BasicPoint2D {
   PolarVector2D(void) : BasicPoint2D() {}
   PolarVector2D(const RealType abs_value, const RealType orientation)
-      : BasicPoint2D(abs_value, orientation) {}
+      : BasicPoint2D(abs_value, constrainAngle(orientation)) {}
 
   // This constructor allows you to construct FrenetPoint2D from Eigen
   // expressions
@@ -272,10 +273,11 @@ struct PolarState2D {
   PolarCovarianceMatrix2D cov_mat;
 
   // Easy access functions:
-  // a) marginalization
+  // marginalization of absolute value
   UncertainValue abs_value() const {
     return {mean.abs_value(), cov_mat.var_abs_value()};
   }
+  // marginalization of orientation angle
   UncertainValue orientation() const {
     return {mean.orientation(), cov_mat.var_orientation()};
   }

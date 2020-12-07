@@ -19,12 +19,12 @@ void EstimateStateMeanAndCovarianceMatrix(
     Eigen::MatrixBase<StateVector> const& resulting_mean,
     Eigen::MatrixBase<StateCovMatrix> const& resulting_cov_mat,
     const int angular_value_index = -1) {
-  // "HACK" modifiable eigen-based paramters need to be passed as const
-  // reference. Here, the constness is casted away.
-  // -> https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
+  // Mutable eigen-based paramters need to be passed as const
+  // reference. To be able to change the value, the constness need to be casted
+  // away. More details about this "hack"  and why it is needed can be found
+  // here: https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
   Eigen::MatrixBase<StateVector>& mean =
       const_cast<Eigen::MatrixBase<StateVector>&>(resulting_mean);
-
   Eigen::MatrixBase<StateCovMatrix>& cov_mat =
       const_cast<Eigen::MatrixBase<StateCovMatrix>&>(resulting_cov_mat);
 
@@ -37,11 +37,11 @@ void EstimateStateMeanAndCovarianceMatrix(
   const int n_sigma_pts = transformed_sigma_pts.cols();
 
   assert(angular_value_index < state_dim);
-  const int j = angular_value_index;
+  const int j = angular_value_index;  // for easy access
 
-  // ////////////////////
+  // ///////////////////////////////////////////////////////////////////////////
   // Estimate state mean
-  // ////////////////////
+  // ///////////////////////////////////////////////////////////////////////////
   // Standard formula for mean calculation
   for (int i = 0; i < n_sigma_pts; i++) {  // iterate over sigma points
     mean += weights_mean(i) * transformed_sigma_pts.col(i);
@@ -57,9 +57,9 @@ void EstimateStateMeanAndCovarianceMatrix(
     mean(angular_value_index) = std::atan2(sum_sin, sum_cos);
   }
 
-  // /////////////////////////////////
+  // ///////////////////////////////////////////////////////////////////////////
   // Estimate state covariance matrix
-  // /////////////////////////////////
+  // ///////////////////////////////////////////////////////////////////////////
   RealType two_pi = 2 * M_PI;
   for (int i = 0; i < n_sigma_pts; i++) {
     // state difference

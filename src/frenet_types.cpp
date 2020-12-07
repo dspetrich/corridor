@@ -154,15 +154,15 @@ RealType FrenetPolyline::deviationAt(const RealType query_l) const {
 // /////////////////////////////////////////////////////////////////////////////
 
 UncertainValue FrenetState2D::abs_velocity() {
-  const auto& polar_velocity_state = polarVelocityState();
+  const auto& polar_velocity_state = getPolarVelocityStatePtr();
   return polar_velocity_state->abs_value();
 };
 UncertainValue FrenetState2D::orientation() {
-  const auto& polar_velocity_state = polarVelocityState();
+  const auto& polar_velocity_state = getPolarVelocityStatePtr();
   return polar_velocity_state->orientation();
 };
 
-const PolarStatePtr FrenetState2D::polarVelocityState() {
+const PolarStatePtr FrenetState2D::getPolarVelocityStatePtr() {
   if (polar_velocity_state_ != nullptr) {
     // if polar velocity is already calculated return pointer.
     return polar_velocity_state_;

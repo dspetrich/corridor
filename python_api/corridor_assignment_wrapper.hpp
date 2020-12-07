@@ -58,14 +58,14 @@ corridor::CorridorRelatedFeatures From(
   return features;
 };
 
-corridor::RealType LateralConfidence(
+corridor::RealType LateralAssignmentConfidence(
     const FlatCorridorRelatedFeatures& flat_features) {
-  return corridor::LateralConfidence(From(flat_features));
+  return corridor::LateralAssignmentConfidence(From(flat_features));
 };
 
-corridor::RealType LongitudinalConfidence(
+corridor::RealType LongitudinalAssignmentConfidence(
     const FlatCorridorRelatedFeatures& flat_features) {
-  return corridor::LongitudinalConfidence(From(flat_features));
+  return corridor::LongitudinalAssignmentConfidence(From(flat_features));
 };
 
 corridor::RealType evaluateIntegralLineWidthGaussian(
@@ -76,3 +76,9 @@ corridor::RealType evaluateIntegralLineWidthGaussian(
   return corridor::math::evaluateIntegralLineWidthGaussian(
       m, b, x, sigma_original, lower_bound, upper_bound);
 };
+
+corridor::RealType MovingConfidence(const corridor::RealType abs_velocity,
+                                    const corridor::RealType std_velocity,
+                                    const corridor::RealType sigma_band) {
+  return corridor::MovingConfidence({abs_velocity, std_velocity}, 2.0);
+}

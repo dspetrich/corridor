@@ -61,10 +61,44 @@ CorridorRelatedFeatures ComputeCorridorRelatedObjectFeature(
     const CartesianState2D& cartesian_state,
     const BoxDimension& bounding_box_dimension, const Corridor& corridor);
 
-RealType LateralConfidence(const CorridorRelatedFeatures& features);
+// /////////////////////////////////////////////////////////////////////////////
+// // Lateral and Longitudinal assignment confidences
+// /////////////////////////////////////////////////////////////////////////////
 
-RealType LongitudinalConfidence(const CorridorRelatedFeatures& features);
+RealType LateralAssignmentConfidence(const CorridorRelatedFeatures& features);
+
+RealType LongitudinalAssignmentConfidence(
+    const CorridorRelatedFeatures& features);
 
 RealType ComputeAssignmentConfidence(const CorridorRelatedFeatures& features);
+
+// /////////////////////////////////////////////////////////////////////////////
+// Moving Confidences
+// /////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Overall moving confidence of the object, based on the objects absolute
+ * velocity and velocity uncertainty. If the absolute velocity is small compared
+ * to the uncertainty, the moving confidence is small as well.
+ *
+ * @param cartesian_state: current cartesian motion state with covariance matrix
+ * @return RealType: moving confidence between 0 and 1.
+ */
+RealType MovingConfidence(const UncertainValue& absolute_velocity,
+                          const RealType sigma_band);
+
+struct MovingDirectionSemantics {
+  RealType overall_moving_confidence = 0.0;
+
+  // Direction based moving semantics. The sum of all values has to be one.
+  RealType following_downstream = 0.25;
+  RealType following_upstream = 0.25;
+  RealType crossing_towardsLeft = 0.25;
+  RealType crossing_towardsRight = 0.25;
+};
+
+MovingDirectionSemantics MovingDirectionConfidence(
+    const UncertainValue& heading_angle, const RealType sigma_band,
+    const RealType moving_confidence);
 
 }  // namespace corridor

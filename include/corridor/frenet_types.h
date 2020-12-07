@@ -430,10 +430,11 @@ class FrenetState2D {
       const FrenetCovarianceMatrix2D& cm_pos_vel =
           FrenetCovarianceMatrix2D::Zero())
       : mean_(position, velocity),
-        cov_mat_(cm_position, cm_velocity, cm_pos_vel) {}
+        cov_mat_(cm_position, cm_velocity, cm_pos_vel),
+        polar_velocity_state_() {}
   FrenetState2D(const FrenetStateVector2D& mean,
                 const FrenetStateCovarianceMatrix2D& cov_mat)
-      : mean_(mean), cov_mat_(cov_mat) {}
+      : mean_(mean), cov_mat_(cov_mat), polar_velocity_state_() {}
 
   // Simple getter
   RealType l() const { return mean_.l(); }
@@ -451,8 +452,6 @@ class FrenetState2D {
     return cov_mat_;
   }
 
-  const PolarStatePtr polarVelocityState();
-
   // Introspection
   friend std::ostream& operator<<(std::ostream& os, const FrenetState2D& state);
 
@@ -462,6 +461,7 @@ class FrenetState2D {
 
   // optional polar interpretation of the velocity vector. Will only be
   // constructed if needed and then cached.
+  const PolarStatePtr getPolarVelocityStatePtr();
   PolarStatePtr polar_velocity_state_;
 };
 
