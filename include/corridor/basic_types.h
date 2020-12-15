@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <boost/optional.hpp>
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -24,6 +25,10 @@ using RealType = double;
 // Currently double, lets find a better representation later
 using TimeStampType = double;
 constexpr TimeStampType InvalidTimeStamp = -1;
+
+// To be replaced by std::optional once c++17 is established
+template <typename T>
+using Optional = boost::optional<T>;
 
 /**
  * @brief Limits the value x to the interval [u,o] or [o,u], depending on which
@@ -275,11 +280,11 @@ struct PolarState2D {
   // Easy access functions:
   // marginalization of absolute value
   UncertainValue abs_value() const {
-    return {mean.abs_value(), cov_mat.var_abs_value()};
+    return {mean.abs_value(), std::sqrt(cov_mat.var_abs_value())};
   }
   // marginalization of orientation angle
   UncertainValue orientation() const {
-    return {mean.orientation(), cov_mat.var_orientation()};
+    return {mean.orientation(), std::sqrt(cov_mat.var_orientation())};
   }
 };
 

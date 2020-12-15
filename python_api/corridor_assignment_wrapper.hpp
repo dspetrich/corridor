@@ -6,6 +6,7 @@
 #include "corridor/basic_types.h"
 #include "corridor/corridor.h"
 #include "corridor/corridor_assignment/corridor_assignment.h"
+#include "corridor/corridor_assignment/corridor_related_semantics.h"
 #include "corridor/internal/math.h"
 
 namespace py = boost::python;
@@ -80,5 +81,21 @@ corridor::RealType evaluateIntegralLineWidthGaussian(
 corridor::RealType MovingConfidence(const corridor::RealType abs_velocity,
                                     const corridor::RealType std_velocity,
                                     const corridor::RealType sigma_band) {
-  return corridor::MovingConfidence({abs_velocity, std_velocity}, 2.0);
+  return corridor::MovingConfidence({abs_velocity, std_velocity}, sigma_band);
+}
+
+py::dict RelativeDirectionConfidence(const corridor::RealType heading_mean,
+                                     const corridor::RealType heading_std,
+                                     const corridor::RealType sigma_band) {
+  using namespace corridor;
+  const auto labels = corridor::RelativeDirectionConfidence(
+      {heading_mean, heading_std}, sigma_band);
+
+  py::dict result;
+  result["downstream"] = labels.at(SemanticLabel::kDownstream);
+  result["upstream"] = labels.at(SemanticLabel::kUpstream);
+  result["towards_left"] = labels.at(SemanticLabel::kTowardsLeft);
+  result["towards_right"] = labels.at(SemanticLabel::kTowardsRight);
+
+  return result;
 }

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iomanip>   // std::setprecision
 #include <iostream>  // std::cout
 
 #include "corridor/basic_types.h"

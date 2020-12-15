@@ -19,7 +19,7 @@ class Interpolation2dTest : public ::testing::Test {
 };
 
 TEST_F(Interpolation2dTest, Interpolation) {
-  DataMatrix<RealType> data = naturalSplineDataMatrixFromPoints(refline_);
+  DataMatrix<RealType> data = NaturalSplineDataMatrixFromPoints(refline_);
 
   // Test end point of evaluation with nodes
   for (DataIdx i = 0, max_idx = data.cols() - 1; i < max_idx; i++) {

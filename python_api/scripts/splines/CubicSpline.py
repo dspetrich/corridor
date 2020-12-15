@@ -21,16 +21,30 @@ class CubicSpline(AbstractSpline):
     def __init__(self, name="cubicSpline", format='g-'):
         AbstractSpline.__init__(self, name, format)
         self.frenet_frames = []
+        self.cubic_spline = corridor.CubicSpline()
 
-    def generatePointsFrom(self, nodes):
+    def getPointsFromParams(self):
+        for i in range(0, self.parameter.size):
+            steps = np.linspace(0, self.parameter.h[i], num=100)
+            pts = self.parameter.cartesianPosition(i, steps)
+            x, y = zip(*pts)
+            self.points.x = np.concatenate((self.points.x, x))
+            self.points.y = np.concatenate((self.points.y, y))
+        return self.getPoints()
+
+    def generatePointsFrom(self, nodes, first_tangent=None, last_tangent=None):
         self.setNodes(nodes)
-        self.defineSplineParams()
+        self.defineSplineParams(first_tangent, last_tangent)
         self.getPointsFromParams()
         return self.points
 
-    def defineSplineParams(self):
-        param_dict = corridor.create_spline_params(
-            self.nodes.x.tolist(), self.nodes.y.tolist())
+    def defineSplineParams(self, first_tangent=None, last_tangent=None):
+        if first_tangent == None and last_tangent == None:
+            param_dict = self.cubic_spline.naturalSplineParameter(
+                self.nodes.x.tolist(), self.nodes.y.tolist())
+        else:
+            param_dict = self.cubic_spline.clampedSplineParameter(
+                self.nodes.x.tolist(), self.nodes.y.tolist(), first_tangent, last_tangent)
 
         self.parameter.h = np.diff(param_dict["arc_length"])
         self.parameter.arc_length = param_dict["arc_length"]
@@ -47,18 +61,9 @@ class CubicSpline(AbstractSpline):
 
         self.parameter.size = len(self.parameter.h)
 
-    def getPointsFromParams(self):
-        for i in range(0, self.parameter.size):
-            steps = np.linspace(0, self.parameter.h[i], num=100)
-            pts = self.parameter.cartesianPosition(i, steps)
-            x, y = zip(*pts)
-            self.points.x = np.concatenate((self.points.x, x))
-            self.points.y = np.concatenate((self.points.y, y))
-        return self.getPoints()
-
     def constructFrenetFrame(self, target_point):
         self.frenet_frames = []
-        frenet_frames = corridor.construct_frenet_frames(
+        frenet_frames = self.cubic_spline.constructFrenetFrames(
             target_point[0, 0], target_point[0, 1])
         for ff in frenet_frames:
             self.frenet_frames.append(
@@ -68,3 +73,6 @@ class CubicSpline(AbstractSpline):
                             ff['tangent'],
                             ff['normal'],
                             target_point))
+
+    def total_arc_length(self):
+        return self.parameter.arc_length[-1]

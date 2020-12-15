@@ -13,8 +13,7 @@ import corridor
 fig = plt.figure()
 ax = fig.gca(projection='3d')
 
-# Define plain features of the object
-# problem parameters
+# Set samples for velocity and its standard deviation
 n_vel = 1000
 n_std = 1000
 

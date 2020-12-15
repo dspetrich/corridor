@@ -31,7 +31,7 @@ class CubicSplineUtilitiesTest : public ::testing::Test {
 };
 
 TEST_F(CubicSplineUtilitiesTest, FindSegmentCandidates) {  // NOLINT
-  DataMatrix<RealType> data = naturalSplineDataMatrixFromPoints(refline_);
+  DataMatrix<RealType> data = NaturalSplineDataMatrixFromPoints(refline_);
 
   SegmentInfoVector<DataIdx, RealType> segment_points;
   const bool matched = FindSegmentCandidates(data, point_, &segment_points);
@@ -43,7 +43,7 @@ TEST_F(CubicSplineUtilitiesTest, FindSegmentCandidates) {  // NOLINT
 }
 
 TEST_F(CubicSplineUtilitiesTest, FrenetFrame) {  // NOLINT
-  DataMatrix<RealType> data = naturalSplineDataMatrixFromPoints(refline_);
+  DataMatrix<RealType> data = NaturalSplineDataMatrixFromPoints(refline_);
 
   const FrenetFrames2D frenet_frames = ConstructFrenetFrames(data, point_);
 

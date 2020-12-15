@@ -19,13 +19,30 @@ bool CubicSpline::constructSplineData(const std::vector<RealType>& x_vec,
   }
 
   // Natural spline
-  data_ = naturalSplineDataMatrixFromPoints(points, epsilon_);
+  data_ = NaturalSplineDataMatrixFromPoints(points, epsilon_);
   return true;
 }
 
 bool CubicSpline::constructSplineData(const CartesianPoints2D& points) {
+  if (points.size() < 2) {
+    return false;
+  }
   // Natural spline
-  data_ = naturalSplineDataMatrixFromPoints(points, epsilon_);
+  data_ = NaturalSplineDataMatrixFromPoints(points, epsilon_);
+  return true;
+}
+
+bool CubicSpline::constructSplineData(const CartesianPoints2D& points,
+                                      const CartesianVector2D& first_tangent,
+                                      const CartesianVector2D& last_tangent) {
+  if (points.size() < 2) {
+    return false;
+  }
+  // clamped spline
+  data_ = ClampedSplineDataMatrixFromPoints(points, first_tangent, last_tangent,
+                                            epsilon_);
+  return true;
+
   return true;
 }
 

@@ -9,52 +9,6 @@ import math
 import corridor
 
 
-def plot_assignment_function(w_c, w_o, x_max):
-    l_x = ()
-    l_y = ()
-    if w_o == 0:
-        l1_x = (-x_max, -0.5*w_c)
-        l1_y = (0.0, 0.0)
-        l2_x = np.linspace(-0.5*w_c, 0.5*w_c, 2)
-        l2_y = 0*l2_x + 1.0
-        l3_x = (0.5*w_c, x_max)
-        l3_y = (0.0, 0.0)
-        l_x = np.concatenate([l1_x, l2_x, l3_x])
-        l_y = np.concatenate([l1_y, l2_y, l3_y])
-    else:
-        m = 1.0/w_o
-        b = 0.5*(1+w_c/w_o)
-        x_max = (w_c + w_o)
-        x_min = -x_max
-        if w_c <= w_o:
-            l1_x = np.linspace(-0.5*(w_c+w_o), 0, 2)
-            l1_y = m*l1_x + b
-            l2_x = np.linspace(0.0, 0.5*(w_c+w_o), 2)
-            l2_y = -m*l2_x + b
-            l_x = np.concatenate([l1_x, l2_x])
-            l_y = np.concatenate([l1_y, l2_y])
-
-        else:
-            l1_x = np.linspace(-0.5*(w_c+w_o), -0.5*(w_c-w_o), 2)
-            l1_y = m*l1_x + b
-            l2_x = np.linspace(-0.5*(w_c-w_o), 0.5*(w_c-w_o), 2)
-            l2_y = 0*l2_x + 1.0
-            l3_x = np.linspace(0.5*(w_c-w_o), 0.5*(w_c+w_o), 2)
-            l3_y = -m*l3_x + b
-            l_x = np.concatenate([l1_x, l2_x, l3_x])
-            l_y = np.concatenate([l1_y, l2_y, l3_y])
-    return l_x, l_y
-
-
-# Figure
-# fig = plt.figure()
-# gs = gridspec.GridSpec(2, 2)
-# ax1 = fig.add_subplot(gs[0, 0])
-# ax2 = fig.add_subplot(gs[0, 1], sharey=ax1)
-# ax3 = fig.add_subplot(gs[1, 0])
-# ax4 = fig.add_subplot(gs[1, 1], sharey=ax3)
-
-
 # 3D plot
 fig = plt.figure()
 ax = fig.gca(projection='3d')
@@ -88,7 +42,7 @@ for i in range(nd):
         yy[i, j] = sigma_d[j]
         features.d = d[i]
         features.sigma_d = sigma_d[j]
-        zz[i, j] = corridor.LateralConfidence(features)
+        zz[i, j] = corridor.LateralAssignmentConfidence(features)
 
 surf = ax.plot_surface(xx, yy, zz, cmap=cm.jet,
                        linewidth=0, antialiased=False)

@@ -112,20 +112,12 @@ TEST_F(FrenetFrameTest, testFrenetStateConversion) {  // NOLINT
   EXPECT_FLOAT_EQ(frenet_state.covarianceMatrix().velocity().ld(),
                   cm_velocity.xy());
 
-  const PolarStatePtr polar_vel_state = frenet_state.polarVelocityState();
+  const auto abs_velocity = frenet_state.abs_velocity();
+  const auto orientation = frenet_state.orientation();
 
-  const auto abs_velocity = frenet_state.polarVelocityState()->mean.abs_value();
-  const auto orientation =
-      frenet_state.polarVelocityState()->mean.orientation();
+  EXPECT_FLOAT_EQ(abs_velocity.value, 6.02515);
+  EXPECT_FLOAT_EQ(orientation.value, 1.0169548);
 
-  EXPECT_FLOAT_EQ(abs_velocity, 6.02515);
-  EXPECT_FLOAT_EQ(orientation, 1.0169548);
-
-  EXPECT_FLOAT_EQ(frenet_state.polarVelocityState()->cov_mat.var_abs_value(),
-                  2.8107188);
-  EXPECT_FLOAT_EQ(frenet_state.polarVelocityState()->cov_mat.var_orientation(),
-                  0.0669813);
-  EXPECT_FLOAT_EQ(
-      frenet_state.polarVelocityState()->cov_mat.cov_value_orientation(),
-      0.0703615);
+  EXPECT_FLOAT_EQ(abs_velocity.variance(), 2.8107188);
+  EXPECT_FLOAT_EQ(orientation.variance(), 0.0669813);
 }

@@ -26,15 +26,31 @@ SplineCoefficients2d SplineCoefficientsFromDataMatrix(
     const DataMatrix<RealType>& data);
 
 /**
- * @brief Creates a spline data matrix a polyline, where the end points are
+ * @brief Creates a spline data matrix from a polyline, where the end points are
  *        curvature (strain-energy) free.
  *
- * @param cartesian_points
+ * @param cartesian_points: polygon consisting of support points
  * @param epsilon: allowed error of the spline length approximation
  * @return DataMatrix<RealType>
  */
-DataMatrix<RealType> naturalSplineDataMatrixFromPoints(
+DataMatrix<RealType> NaturalSplineDataMatrixFromPoints(
     const CartesianPoints2D& cartesian_points,
+    const RealType epsilon = g_epsilon_arc_length);
+
+/**
+ * @brief Creates a spline data matrix a polyline, where the tangen in the first
+ *        and last point is predefined.
+ *
+ * @param cartesian_points: polygon consisting of support points
+ * @param first_tangent: Tangent vector on the first point of the polygon
+ * @param last_tangent: Tangent vector on the last point of the polygon
+ * @param epsilon: allowed error of the spline length approximation
+ * @return DataMatrix<RealType>
+ */
+DataMatrix<RealType> ClampedSplineDataMatrixFromPoints(
+    const CartesianPoints2D& cartesian_points,
+    const CartesianVector2D& first_tangent,
+    const CartesianVector2D& last_tangent,
     const RealType epsilon = g_epsilon_arc_length);
 
 }  // namespace cubic_spline

@@ -37,6 +37,10 @@ class CubicSpline {
       id_ = InvalidId;
     }
   }
+  CubicSpline(const IdType id, const CartesianPoints2D& cartesian_points,
+              const CartesianVector2D& first_tangent,
+              const CartesianVector2D& last_tangent,
+              const RealType epsilon = g_epsilon_arc_length) {}
 
   /** @name Simple public get functions */
   ///@{
@@ -85,6 +89,18 @@ class CubicSpline {
    * @return false
    */
   bool constructSplineData(const CartesianPoints2D& points);
+
+  /**
+   * @brief  Constructs the spline data matrix from a polyline with tangent
+   * vectors for the first and last point
+   *
+   * @param points
+   * @return true
+   * @return false
+   */
+  bool constructSplineData(const CartesianPoints2D& points,
+                           const CartesianVector2D& first_tangent,
+                           const CartesianVector2D& last_tangent);
 
   /**
    * @brief ToString: Debug information

@@ -3,6 +3,7 @@
 #include "corridor/basic_types.h"
 #include "corridor/cartesian_types.h"
 #include "corridor/corridor.h"
+#include "corridor/corridor_assignment/corridor_related_semantics.h"
 #include "corridor/frenet_types.h"
 #include "corridor/internal/math.h"
 
@@ -41,15 +42,6 @@ RealType ComputeAssignmentConfidence(const CorridorRelatedFeatures& features) {
 
   return latConf * lonConf;
 };
-
-// SemanticLabels ComputeMovingOnSemantics(
-//     const CorridorRelatedFeatures& features) {
-//   SemanticLabels longitudinal = LongitudinalMovingConfidence(features, 3.0);
-
-//   SemanticLabels lateral = LateralMovingConfidence(features, 3.0);
-
-//   return longitudinal + lateral;
-// };
 
 // /////////////////////////////////////////////////////////////////////////////
 // Lateral and Longitudinal assignment confidences
@@ -173,7 +165,7 @@ RealType LongitudinalAssignmentConfidence(
 };
 
 // /////////////////////////////////////////////////////////////////////////////
-// Moving Confidences
+// Moving Confidence
 // /////////////////////////////////////////////////////////////////////////////
 
 RealType MovingConfidence(const UncertainValue& absolute_velocity,
@@ -193,16 +185,19 @@ RealType MovingConfidence(const UncertainValue& absolute_velocity,
   return 1 - non_moving_confidence;
 };
 
-MovingDirectionSemantics MovingDirectionConfidence(
-    const UncertainValue& heading_angle, const RealType sigma_band,
-    const RealType moving_confidence) {
+// /////////////////////////////////////////////////////////////////////////////
+// Relative Direction Confidence
+// /////////////////////////////////////////////////////////////////////////////
+SemanticLabelSet RelativeDirectionConfidence(
+    const UncertainValue& relative_heading_angle, const RealType sigma_band) {
   // Extract value and standard deviation for better readability
-  const RealType v = heading_angle.value;
-  const RealType sigma_v = heading_angle.standard_deviation;
+  const RealType v = relative_heading_angle.value;
+  const RealType sigma_v = relative_heading_angle.standard_deviation;
 
   // Deviation from straight forward/crossing angle which is still considered
   // forward/crossing
-  const static RealType delta_phi = M_PI / 64.0;  // ~ 2.8 degrees
+  // const static RealType delta_phi = M_PI / 64.0;  // ~ 2.8 degrees
+  const static RealType delta_phi = std::max(sigma_v * sigma_band, M_PI / 64.0);
 
   // Specific angles
   const static RealType a0 = -10.0;
@@ -255,6 +250,11 @@ MovingDirectionSemantics MovingDirectionConfidence(
   const static RealType b24 = b2;
   const static RealType b25 = 1.0;
 
+  // Initialize
+  SemanticLabelSet semantic_labels(
+      {SemanticLabel::kDownstream, SemanticLabel::kUpstream,
+       SemanticLabel::kTowardsLeft, SemanticLabel::kTowardsRight});
+
   // A) following downstream
   RealType following_downstream = 0.0;
   following_downstream +=
@@ -272,6 +272,8 @@ MovingDirectionSemantics MovingDirectionConfidence(
   following_downstream +=
       math::evaluateIntegralLineWidthGaussian(0.0, b25, v, sigma_v, a16, a17);
 
+  semantic_labels.setLabel(SemanticLabel::kDownstream, following_downstream);
+
   // B) following upstream
   RealType following_upstream = 0.0;
   following_upstream +=
@@ -286,6 +288,8 @@ MovingDirectionSemantics MovingDirectionConfidence(
       math::evaluateIntegralLineWidthGaussian(0.0, b19, v, sigma_v, a12, a13);
   following_upstream +=
       math::evaluateIntegralLineWidthGaussian(-m, b20, v, sigma_v, a13, a14);
+
+  semantic_labels.setLabel(SemanticLabel::kUpstream, following_upstream);
 
   // C) crossing towards left
   RealType crossing_left = 0.0;
@@ -302,6 +306,8 @@ MovingDirectionSemantics MovingDirectionConfidence(
   crossing_left +=
       math::evaluateIntegralLineWidthGaussian(-m, b17, v, sigma_v, a11, a12);
 
+  semantic_labels.setLabel(SemanticLabel::kTowardsLeft, crossing_left);
+
   // D) crossing towards right
   RealType crossing_right = 0.0;
   crossing_right +=
@@ -317,74 +323,12 @@ MovingDirectionSemantics MovingDirectionConfidence(
   crossing_right +=
       math::evaluateIntegralLineWidthGaussian(-m, b23, v, sigma_v, a15, a16);
 
-  return MovingDirectionSemantics();
+  semantic_labels.setLabel(SemanticLabel::kTowardsRight, crossing_right);
+
+  // Guarantee that the sum of all labels is one
+  // semantic_labels.normalize();
+
+  return semantic_labels;
 }
-
-// //
-// /////////////////////////////////////////////////////////////////////////////
-// // Lateral and Longitudinal moving confidences
-// //
-// /////////////////////////////////////////////////////////////////////////////
-
-// SemanticLabels LongitudinalMovingConfidence(
-//     const CorridorRelatedFeatures& features, const RealType sigma_band) {
-//   // Longitudinal features
-//   const RealType vl = features.frenet_state.vl();
-//   const RealType sigma_vl =
-//       std::sqrt(features.frenet_state_covMat.velocity().ll());
-
-//   // Velocities below 0.5 mps are considered as non-moving
-//   // TODO parameter!
-//   const RealType nonMoving_limit = std::max(sigma_vl * sigma_band, 0.5);
-
-//   SemanticLabels semantic_labels;
-//   // Confidence based on negative velocity
-//   semantic_labels[SemanticLabel::kUpstream] =
-//       math::evaluateIntegralLineWidthGaussian(0.0, 1.0, vl, sigma_vl, -100.0,
-//                                               -nonMoving_limit);
-
-//   // Non moving confidence
-//   semantic_labels[SemanticLabel::kDownstream] =
-//       math::evaluateIntegralLineWidthGaussian(0.0, 1.0, vl, sigma_vl,
-//                                               nonMoving_limit, 100.0);
-
-//   // Confidence based on positive velocity
-//   semantic_labels[SemanticLabel::kLongitudinalNonMoving] =
-//       math::evaluateIntegralLineWidthGaussian(
-//           0.0, 1.0, vl, sigma_vl, -nonMoving_limit, nonMoving_limit);
-
-//   return semantic_labels;
-// }
-
-// SemanticLabels LateralMovingConfidence(const CorridorRelatedFeatures&
-// features,
-//                                        const RealType sigma_band) {
-//   // Lateral features
-//   const RealType vd = features.frenet_state.vd();
-//   const RealType sigma_vd =
-//       std::sqrt(features.frenet_state_covMat.velocity().dd());
-
-//   // Velocities below 0.5 mps are considered as non-moving
-//   // TODO parameter!
-//   const RealType nonMoving_limit = std::max(sigma_vd * sigma_band, 0.5);
-
-//   SemanticLabels semantic_labels;
-
-//   // Confidence based on negative velocity
-//   semantic_labels[SemanticLabel::kRight] =
-//       math::evaluateIntegralLineWidthGaussian(0.0, 1.0, vd, sigma_vd, -100.0,
-//                                               -nonMoving_limit);
-
-//   // Non moving confidence based on negative velocity
-//   semantic_labels[SemanticLabel::kLeft] =
-//       math::evaluateIntegralLineWidthGaussian(0.0, 1.0, vd, sigma_vd,
-//                                               nonMoving_limit, 100.0);
-
-//   semantic_labels[SemanticLabel::kLateralNonMoving] =
-//       math::evaluateIntegralLineWidthGaussian(
-//           0.0, 1.0, vd, sigma_vd, -nonMoving_limit, nonMoving_limit);
-
-//   return semantic_labels;
-// }
 
 }  // namespace corridor

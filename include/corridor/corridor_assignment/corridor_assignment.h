@@ -3,6 +3,7 @@
 #include "corridor/basic_types.h"
 #include "corridor/cartesian_types.h"
 #include "corridor/corridor.h"
+#include "corridor/corridor_assignment/corridor_related_semantics.h"
 #include "corridor/frenet_types.h"
 
 namespace corridor {
@@ -87,18 +88,7 @@ RealType ComputeAssignmentConfidence(const CorridorRelatedFeatures& features);
 RealType MovingConfidence(const UncertainValue& absolute_velocity,
                           const RealType sigma_band);
 
-struct MovingDirectionSemantics {
-  RealType overall_moving_confidence = 0.0;
-
-  // Direction based moving semantics. The sum of all values has to be one.
-  RealType following_downstream = 0.25;
-  RealType following_upstream = 0.25;
-  RealType crossing_towardsLeft = 0.25;
-  RealType crossing_towardsRight = 0.25;
-};
-
-MovingDirectionSemantics MovingDirectionConfidence(
-    const UncertainValue& heading_angle, const RealType sigma_band,
-    const RealType moving_confidence);
+SemanticLabelSet RelativeDirectionConfidence(
+    const UncertainValue& relative_heading_angle, const RealType sigma_band);
 
 }  // namespace corridor
