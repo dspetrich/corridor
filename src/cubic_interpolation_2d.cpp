@@ -70,7 +70,6 @@ void ArcLengthApproximation(DataMatrix<RealType>& data,
                             const RealType epsilon = g_epsilon_arc_length) {
   assert(static_cast<DataSize>(coefficients.size()) == (data.cols() - 1));
   RealType accumulated_arc_length = 0.f;
-  // TODO: simplify the for loop
   for (std::size_t idx = 0, max_idx = coefficients.size(); idx < max_idx;
        idx++) {
     const auto data_idx = static_cast<DataIdx>(idx);
@@ -247,7 +246,9 @@ DataMatrix<RealType> ClampedSplineDataMatrixFromPoints(
     // Define Coefficients
     SplineCoefficients2d coefficients = SplineCoefficientsFromDataMatrix(data);
 
-    // Define new arc-length
+    // Define new arc-length and delta_arc length to last iteration. If the
+    // arc-length calculation converged towards a stable value (delta_arclength
+    // is small) stop the calculation.
     delta_arc_length = data(kArcLength, data.cols() - 1);
     ArcLengthApproximation(data, coefficients);
     delta_arc_length -= data(kArcLength, data.cols() - 1);

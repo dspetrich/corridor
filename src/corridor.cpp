@@ -16,6 +16,17 @@ Corridor::Corridor(const IdType id, const CartesianPoints2D& centerline_pts,
   rightBound_ = referenceLine_.toFrenetPolyline(right_boundary_pts);
 }
 
+Corridor::Corridor(const IdType id, const CartesianPoints2D& centerline_pts,
+                   const CartesianPoints2D& left_boundary_pts,
+                   const CartesianPoints2D& right_boundary_pts,
+                   const CartesianVector2D& first_tangent,
+                   const CartesianVector2D& last_tangent) {
+  referenceLine_ =
+      cs::CubicSpline(id, centerline_pts, first_tangent, last_tangent);
+  leftBound_ = referenceLine_.toFrenetPolyline(left_boundary_pts);
+  rightBound_ = referenceLine_.toFrenetPolyline(right_boundary_pts);
+}
+
 BoundaryDistances Corridor::signedDistancesAt(
     const RealType arc_length) const noexcept {
   return std::make_pair(leftBound_.deviationAt(arc_length),
