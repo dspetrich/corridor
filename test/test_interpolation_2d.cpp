@@ -24,7 +24,8 @@ TEST_F(Interpolation2dTest, Interpolation) {
   // Test end point of evaluation with nodes
   for (DataIdx i = 0, max_idx = data.cols() - 1; i < max_idx; i++) {
     auto l = data.col(i + 1)[kArcLength] - data.col(i)[kArcLength];
-    auto p = Coefficients2d(data.col(i), data.col(i + 1)).evaluatePosition(l);
+    auto p =
+        Coefficients2d(data.col(i), data.col(i + 1)).interpolatePosition(l);
     auto expect_p = data.block<2, 1>(kPoint_x, i + 1);
     EXPECT_LE((p - expect_p).norm(), 1e-6);
   }

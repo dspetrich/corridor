@@ -84,19 +84,83 @@ FrenetStateCovarianceMatrix2D FrenetFrame2D::FromCartesianStateCovarianceMatrix(
   const auto vel_covMat = state_vector_covariance_matrix.velocity();
   const auto posvel_covMat = state_vector_covariance_matrix.pos_vel();
 
+  const RotationMatrix rotMat_C2F_transposed = rotMat_C2F_.transpose();
+
   const auto frenet_pos_covMat =
-      rotMat_C2F_ * pos_covMat * rotMat_C2F_.transpose();
+      rotMat_C2F_ * pos_covMat * rotMat_C2F_transposed;
   const auto frenet_vel_covMat =
-      rotMat_C2F_ * vel_covMat * rotMat_C2F_.transpose();
+      rotMat_C2F_ * vel_covMat * rotMat_C2F_transposed;
   const auto frenet_pos_vel_covMat =
-      rotMat_C2F_ * posvel_covMat * rotMat_C2F_.transpose();
+      rotMat_C2F_ * posvel_covMat * rotMat_C2F_transposed;
 
   return FrenetStateCovarianceMatrix2D(frenet_pos_covMat, frenet_vel_covMat,
                                        frenet_pos_vel_covMat);
 };
 
+FrenetState2D FrenetFrame2D::FromCartesianStateTaylorExpansion(
+    const CartesianState2D& cartesian_state) const {
+  // Non-linear transformation using the Taylor Series upt to term
+  const FrenetStateVector2D frenet_state_vector =
+      FromCartesianStateVector(cartesian_state.mean(), true);
+
+  // Easy access
+  const CartesianVector2D relative_vector =
+      cartesian_state.position() - origin_;
+  const RealType projection_on_tangent = tangent_.dot(relative_vector);
+  const RealType projection_on_normal = normal_.dot(relative_vector);
+
+  const RealType vp = tangent_.dot(cartesian_state.velocity());
+
+  // Jacobean matrix at cartesian mean
+  // x-direction
+  const RealType Jf_vel_x_rx = frenet_base_.curvature * vp * normal_.x();
+  const RealType Jf_vel_x_ry = frenet_base_.curvature * vp * normal_.y();
+  const RealType Jf_vel_x_vx = tangent_.x() + frenet_base_.curvature *
+                                                  tangent_.x() *
+                                                  projection_on_normal;
+  const RealType Jf_vel_x_vy = tangent_.y() + frenet_base_.curvature *
+                                                  tangent_.y() *
+                                                  projection_on_normal;
+  // y-direction
+  const RealType Jf_vel_y_rx = -frenet_base_.curvature * vp * tangent_.x();
+  const RealType Jf_vel_y_ry = -frenet_base_.curvature * vp * tangent_.y();
+  const RealType Jf_vel_y_vx = normal_.x() + frenet_base_.curvature *
+                                                 tangent_.x() *
+                                                 projection_on_tangent;
+  const RealType Jf_vel_y_vy = normal_.y() + frenet_base_.curvature *
+                                                 tangent_.y() *
+                                                 projection_on_tangent;
+  // Define complete Jacobean matrix
+  Eigen::Matrix<RealType, 4, 4> jacobean_matrix =
+      Eigen::Matrix<RealType, 4, 4>::Zero();
+  jacobean_matrix.block<2, 2>(0, 0) = rotMat_C2F_;
+  jacobean_matrix(2, 0) = Jf_vel_x_rx;
+  jacobean_matrix(2, 1) = Jf_vel_x_ry;
+  jacobean_matrix(2, 2) = Jf_vel_x_vx;
+  jacobean_matrix(2, 3) = Jf_vel_x_vy;
+
+  jacobean_matrix(3, 0) = Jf_vel_y_rx;
+  jacobean_matrix(3, 1) = Jf_vel_y_ry;
+  jacobean_matrix(3, 2) = Jf_vel_y_vx;
+  jacobean_matrix(3, 3) = Jf_vel_y_vy;
+
+  Eigen::Matrix<RealType, 4, 4> jacobean_matrix_transposed =
+      jacobean_matrix.transpose();
+
+  FrenetStateCovarianceMatrix2D frenet_cov_mat =
+      jacobean_matrix * cartesian_state.covarianceMatrix() *
+      jacobean_matrix_transposed;
+
+  return {frenet_state_vector, frenet_cov_mat};
+}
+
 FrenetState2D FrenetFrame2D::FromCartesianState(
-    const CartesianState2D& cartesian_state, const bool moving_frenet_frame) {
+    const CartesianState2D& cartesian_state,
+    const bool moving_frenet_frame) const {
+  if (moving_frenet_frame) {
+    return FromCartesianStateTaylorExpansion(cartesian_state);
+  }
+  // Linear transformation function
   return {
       FromCartesianStateVector(cartesian_state.mean()),
       FromCartesianStateCovarianceMatrix(cartesian_state.covarianceMatrix())};

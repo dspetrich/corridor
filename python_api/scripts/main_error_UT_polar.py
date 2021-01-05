@@ -111,10 +111,10 @@ r_range = np.linspace(0, 20, 40)
 std_r_range = np.linspace(0.5, 10, 10)
 
 # Heading angle doesn't play a big role in the error.
-heading_range = np.linspace(0.0, 2*math.pi, 1)
+heading_range = np.linspace(0.0, 2*math.pi, 4)
 
 # But of cause the standard deviation of the heading
-std_h_range = np.linspace(1e-5, math.pi/4.0, 1)
+std_h_range = np.linspace(1e-5, math.pi/4.0, 10)
 
 lines = []
 for std_h in std_h_range:

@@ -19,6 +19,8 @@ Coefficients2d::Coefficients2d(const DataColumn<RealType>& q1,
 
   d_x = delta_q(kMoment_x) / (6.0 * delta_q(kArcLength));
   d_y = delta_q(kMoment_y) / (6.0 * delta_q(kArcLength));
+
+  max_length = delta_q(kArcLength);
 }
 
 RealType ApproxArclengthNewtonCotes(const Coefficients2d& coeffs,
@@ -32,7 +34,7 @@ RealType ApproxArclengthNewtonCotes(const Coefficients2d& coeffs,
   for (int k = 0; k < 7; k++) {
     u = static_cast<RealType>(k / 6.f * approx_h);
 
-    t_vec = coeffs.evaluateTangent(u);
+    t_vec = coeffs.interpolateTangent(u);
 
     new_h += weight[k] / 840.f * t_vec.norm();
   }
@@ -99,7 +101,8 @@ RealType IntegralLegendreGauss(const Coefficients2d& coeffs,
   RealType res_val = 0.0;
   //! function values
   for (int i = 0; i < 3; i++) {
-    res_val += weights[i] * coeffs.evaluateTangent(var_1 * p[i] + var_2).norm();
+    res_val +=
+        weights[i] * coeffs.interpolateTangent(var_1 * p[i] + var_2).norm();
   }
 
   return res_val * var_1;

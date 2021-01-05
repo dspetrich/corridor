@@ -153,8 +153,12 @@ class FrenetFrame2D {
       const CartesianStateCovarianceMatrix2D& state_vector_covariance_matrix,
       const bool moving_frenet_frame = false) const;
 
-  FrenetState2D FromCartesianState(const CartesianState2D& cartesian_state,
-                                   const bool moving_frenet_frame = false);
+  FrenetState2D FromCartesianStateTaylorExpansion(
+      const CartesianState2D& cartesian_state) const;
+
+  FrenetState2D FromCartesianState(
+      const CartesianState2D& cartesian_state,
+      const bool moving_frenet_frame = false) const;
 
   const FrenetBase2D& frenet_base() const { return frenet_base_; }
   const CartesianPoint2D& origin() const { return origin_; }
@@ -450,6 +454,10 @@ class FrenetState2D {
   const FrenetStateCovarianceMatrix2D& covarianceMatrix() const {
     return cov_mat_;
   }
+
+  // Non-const reference
+  FrenetStateVector2D& mean() { return mean_; }
+  FrenetStateCovarianceMatrix2D& covarianceMatrix() { return cov_mat_; }
 
   // Introspection
   friend std::ostream& operator<<(std::ostream& os, const FrenetState2D& state);

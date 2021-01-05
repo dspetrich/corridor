@@ -3,10 +3,27 @@
 import random
 import statistics
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 import matplotlib.transforms as transforms
 import corridor
+
+matplotlib.rcParams.update({
+    "pgf.texsystem": "pdflatex",
+    'font.family': 'serif',
+    'font.size': '10',
+    'text.usetex': True,
+    'pgf.rcfonts': False,
+    'figure.autolayout': True,
+    # 'figure.figsize': [7, 4],
+    'axes.titlesize': 'medium',
+    'xtick.labelsize': 'small',
+    'ytick.labelsize': 'small',
+    'legend.fontsize': 'x-small',
+    'legend.title_fontsize': 'small',
+    # 'axes.labelsize': 'small',
+})
 
 
 def confidence_ellipse(ax, mean, cov_mat, n_std=3, facecolor='none', **kwargs):
@@ -50,13 +67,13 @@ cart_data = np.stack((x, y), axis=0)
 cart_mean = np.mean(cart_data, axis=1)
 cart_cov = np.cov(cart_data)
 
-print("Cartesian State")
-print(cart_mean)
-print(cart_cov)
+# print("Cartesian State")
+# print(cart_mean)
+# print(cart_cov)
 
 fig, (ax_cart, ax_polar) = plt.subplots(1, 2)
 
-ax_cart.plot(x, y, 'x')
+ax_cart.plot(x, y, 'g.', alpha=0.3)
 ax_cart.axis('equal')
 
 # Plot mean and covMat
@@ -73,16 +90,16 @@ for i in range(n_samples):
     r_list.append(result[0])
     phi_list.append(result[1])
 
-ax_polar.plot(r_list, phi_list, 'gx')
+ax_polar.plot(r_list, phi_list, 'g.', alpha=0.3)
 
 # Calculate mean and covariance matrix
 polar = np.stack((r_list, phi_list), axis=0)
 polar_mean = np.mean(polar, axis=1)
 polar_cov = np.cov(polar)
 
-print("Polar State")
-print(polar_mean)
-print(polar_cov)
+# print("Polar State")
+# print(polar_mean)
+# print(polar_cov)
 
 
 ax_polar.plot(polar_mean[0], polar_mean[1], 'ro')
@@ -108,8 +125,8 @@ ut_polar_mean = np.array([polar_state.r, polar_state.phi])
 ut_polar_cov = np.array([[polar_state.var_r, polar_state.cov_rphi], [
     polar_state.cov_rphi, polar_state.var_phi]])
 
-print(ut_polar_mean)
-print(ut_polar_cov)
+# print(ut_polar_mean)
+# print(ut_polar_cov)
 
 ax_polar.plot(ut_polar_mean[0], ut_polar_mean[1], 'bo')
 confidence_ellipse(ax_polar, ut_polar_mean, ut_polar_cov,

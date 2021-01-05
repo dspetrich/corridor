@@ -1,78 +1,59 @@
 #include "corridor/cubic_spline/cubic_spline_utilities.h"
 
-#include "corridor/basic_types.h"
-#include "corridor/cubic_spline/cubic_spline_coefficients.h"
-
 namespace corridor {
 namespace cubic_spline {
 
 CartesianPoint2D EvaluatePosition(const DataSegment<RealType>& data_segment,
                                   const RealType arc_length) {
   const Coefficients2d segment_coeffs(data_segment.col(0), data_segment.col(1));
-  return segment_coeffs.evaluatePosition(arc_length);
+  return segment_coeffs.interpolatePosition(arc_length);
 }
 
 CartesianPoint2D EvaluateTangent(const DataSegment<RealType>& data_segment,
                                  const RealType arc_length) {
   const Coefficients2d segment_coeffs(data_segment.col(0), data_segment.col(1));
-  return segment_coeffs.evaluateTangent(arc_length).normalized();
+  return segment_coeffs.interpolateTangent(arc_length).normalized();
 }
 
 CartesianPoint2D EvaluateNormal(const DataSegment<RealType>& data_segment,
                                 const RealType arc_length) {
   const Coefficients2d segment_coeffs(data_segment.col(0), data_segment.col(1));
-  return segment_coeffs.evaluateNormal(arc_length).normalized();
+  return segment_coeffs.interpolateNormal(arc_length).normalized();
 }
 
 CartesianPoint2D EvaluateCurvature(const DataSegment<RealType>& data_segment,
                                    const RealType arc_length) {
   const Coefficients2d segment_coeffs(data_segment.col(0), data_segment.col(1));
-  return segment_coeffs.evaluateCurvature(arc_length);
+  return segment_coeffs.interpolateCurvature(arc_length);
 }
 
 RealType InterpolateSignedCurvatureValue(
     const DataSegment<RealType>& data_segment, const RealType arc_length) {
   const Coefficients2d segment_coeffs(data_segment.col(0), data_segment.col(1));
-
-  const CartesianPoint2D tangent =
-      segment_coeffs.evaluateTangent(arc_length).normalized();
-  const CartesianPoint2D curvature =
-      segment_coeffs.evaluateCurvature(arc_length);
-
-  // Sign of curvature by direction of cross product of tangent and curvature
-  // vector
-  const RealType sign_cur_value =
-      tangent.x() * curvature.y() - tangent.y() * curvature.x();
-  const RealType signed_curvature_value =
-      (sign_cur_value >= 0.0) ? (curvature.norm()) : (-curvature.norm());
-
-  return signed_curvature_value;
+  return segment_coeffs.interpolateSignedCurvatureValue(arc_length);
 }
 
 FrenetFrameTripod InterpolateFrenetFrameTripod(
     const DataSegment<RealType>& data_segment, const RealType arc_length) {
   const Coefficients2d segment_coeffs(data_segment.col(0), data_segment.col(1));
 
-  const CartesianPoint2D origin = segment_coeffs.evaluatePosition(arc_length);
+  const CartesianPoint2D origin =
+      segment_coeffs.interpolatePosition(arc_length);
   // Tangent and Normal are normalized for safety reasons
   const CartesianPoint2D tangent =
-      segment_coeffs.evaluateTangent(arc_length).normalized();
+      segment_coeffs.interpolateTangent(arc_length).normalized();
   const CartesianPoint2D normal =
-      segment_coeffs.evaluateNormal(arc_length).normalized();
+      segment_coeffs.interpolateNormal(arc_length).normalized();
   const CartesianPoint2D curvature =
-      segment_coeffs.evaluateCurvature(arc_length);
-  const CartesianPoint2D ccr = segment_coeffs.evaluateCurvatureChangeRate();
+      segment_coeffs.interpolateCurvature(arc_length);
+  const CartesianPoint2D ccr = segment_coeffs.interpolateCurvatureChangeRate();
 
-  // Sign of curvature by direction of cross product of tangent and curvature
-  // vector
-  const RealType sign_cur_value =
-      tangent.x() * curvature.y() - tangent.y() * curvature.x();
+  // Sign of curvature and curvature change rate values
   const RealType curvature_value =
-      (sign_cur_value >= 0.0) ? (curvature.norm()) : (-curvature.norm());
+      segment_coeffs.interpolateSignedCurvatureValue(tangent, curvature);
 
-  const RealType sign_ccr_value = tangent.x() * ccr.y() - tangent.y() * ccr.x();
   const RealType ccr_value =
-      (sign_ccr_value >= 0.0) ? (ccr.norm()) : (-ccr.norm());
+      segment_coeffs.interpolateSignedCurvatureValue(tangent, ccr);
 
   return std::make_tuple(origin, tangent, normal, curvature_value, ccr_value);
 }
@@ -97,15 +78,40 @@ Eigen::Matrix<RealType, 2, Eigen::Dynamic> TangentsOnNodes(
   return tangents;
 }
 
-RealType ProjectPointToTangent(
-    const DataSegment<RealType>& data_segment,
-    const SegmentInfo<DataIdx, RealType>& segment_info,
-    const CartesianPoint2D& point) {
+RealType TangentialProjection(const CartesianPoint2D& point,
+                              const Coefficients2d& segment_coeffs,
+                              const RealType arc_length) {
   const CartesianPoint2D origin =
-      EvaluatePosition(data_segment, segment_info.relative_arc_length);
+      segment_coeffs.interpolatePosition(arc_length);
   const CartesianPoint2D tangent =
-      EvaluateTangent(data_segment, segment_info.relative_arc_length);
+      segment_coeffs.interpolateTangent(arc_length);
   return tangent.dot(point - origin);
+}
+RealType TangentialProjectionNewtonRaphson(const CartesianPoint2D& point,
+                                           const Coefficients2d& segment_coeffs,
+                                           const RealType arc_length) {
+  // Interpolate at arc-length
+  const CartesianPoint2D origin =
+      segment_coeffs.interpolatePosition(arc_length);
+  const CartesianPoint2D tangent =
+      segment_coeffs.interpolateTangent(arc_length);
+  const CartesianPoint2D normal = segment_coeffs.interpolateNormal(arc_length);
+  const CartesianPoint2D curvature =
+      segment_coeffs.interpolateCurvature(arc_length);
+  const RealType signed_curvature =
+      segment_coeffs.interpolateSignedCurvatureValue(tangent, curvature);
+
+  const CartesianPoint2D delta = point - origin;
+
+  const RealType projection = tangent.dot(delta);
+
+  const RealType projection_derivative =
+      signed_curvature * normal.dot(delta) - 1.0;
+
+  if (projection_derivative == 0.0) {
+    return 0.0;
+  }
+  return -(projection / projection_derivative);
 }
 
 bool FindSegmentCandidates(
@@ -154,19 +160,28 @@ bool FindProjectionOnSegment(const DataSegment<RealType>& data_segment,
                              SegmentInfo<DataIdx, RealType>* segment_info,
                              const CartesianPoint2D& point,
                              const RealType epsilon) {
+  const Coefficients2d segment_coeffs(data_segment.col(0), data_segment.col(1));
   RealType l_min = 0.f;
   RealType l_max =
       data_segment.col(1)[kArcLength] - data_segment.col(0)[kArcLength];
   RealType delta_l = 0.f;
 
-  // Check current arc-length in segment_info
+  // Check current arc-length in segment_info against segment boundaries
   if (segment_info->relative_arc_length <= l_min) {
     segment_info->relative_arc_length = 0.f;
-    return true;
+    delta_l = TangentialProjection(point, segment_coeffs,
+                                   segment_info->relative_arc_length);
+    if (std::abs(delta_l) < epsilon) {
+      return true;
+    }
+    if (0.0 < delta_l) {
+      return false;
+    }
   }
   if (l_max < segment_info->relative_arc_length) {
     segment_info->relative_arc_length = l_max;
-    delta_l = ProjectPointToTangent(data_segment, *segment_info, point);
+    delta_l = TangentialProjection(point, segment_coeffs,
+                                   segment_info->relative_arc_length);
     if (std::abs(delta_l) < epsilon) {
       return true;
     }
@@ -178,7 +193,8 @@ bool FindProjectionOnSegment(const DataSegment<RealType>& data_segment,
   //! 1) Binary Search (find the closest base point)
   for (int count = 0; count < 100; count++) {
     segment_info->relative_arc_length = 0.5f * (l_max - l_min) + l_min;
-    delta_l = ProjectPointToTangent(data_segment, *segment_info, point);
+    delta_l = TangentialProjection(point, segment_coeffs,
+                                   segment_info->relative_arc_length);
 
     if (std::abs(delta_l) < epsilon) {
       return true;
@@ -194,10 +210,11 @@ bool FindProjectionOnSegment(const DataSegment<RealType>& data_segment,
   l_max = data_segment.col(1)[kArcLength] - data_segment.col(0)[kArcLength];
 
   // Newton's method base projection search
-  for (int count = 0; count < 100; count++) {
+  for (int count = 0; count < 10; count++) {
     segment_info->relative_arc_length =
         limit(segment_info->relative_arc_length + delta_l, l_min, l_max);
-    delta_l = ProjectPointToTangent(data_segment, *segment_info, point);
+    delta_l = TangentialProjectionNewtonRaphson(
+        point, segment_coeffs, segment_info->relative_arc_length);
 
     if (std::abs(delta_l) < epsilon) {
       return true;

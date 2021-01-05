@@ -31,7 +31,7 @@ void ToPolarCoordinates2D(const Eigen::Vector2d& initial_x,
                           const Eigen::Matrix2d& initial_P,
                           PolarVector2D* resulting_x,
                           PolarCovarianceMatrix2D* resulting_P) {
-  // State tranformation: vel_x, vel_y -> abs_vel, theta
+  // State transformation: vel_x, vel_y -> abs_vel, theta
   MerweScaledSigmaPoints<2> sigma_pts_generator;
   const auto& sigmas =
       sigma_pts_generator.generateSigmaPoints(initial_x, initial_P);
