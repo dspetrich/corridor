@@ -240,7 +240,7 @@ class FrenetPolyline {
    * @brief This function returns the deviation 'd' coordinate of the (l,d)
    * Frenet coordinates defining the Frenet polyline. Between two nodes linearly
    * interpolated between two closest Frenet polyline points. If the 'l' value
-   * is negative or larger than the arc length, then respectively the 'd'
+   * is negative or larger than the arc length, then the 'd'
    * coordinate corresponding to the beginning or end of the curve is returned.
    *
    * @param[in] l: l value to query
@@ -339,6 +339,11 @@ struct FrenetCovarianceMatrix2D
                            const RealType ld = 0.0) {
     (*this) << ll, ld, ld, dd;
   }
+  // Constructor for off-diagonal matrix contained in a bigger CovMat
+  FrenetCovarianceMatrix2D(const RealType ll, const RealType dd,
+                           const RealType ld, const RealType dl) {
+    (*this) << ll, ld, dl, dd;
+  }
 
   using Base = Eigen::Matrix<RealType, 2, 2, Eigen::DontAlign>;
 
@@ -361,6 +366,7 @@ struct FrenetCovarianceMatrix2D
   const RealType ll() const { return (*this)(0, 0); }
   const RealType dd() const { return (*this)(1, 1); }
   const RealType ld() const { return (*this)(0, 1); }
+  const RealType dl() const { return (*this)(1, 0); }
 };
 
 struct FrenetStateCovarianceMatrix2D
@@ -376,17 +382,15 @@ struct FrenetStateCovarianceMatrix2D
     this->block<2, 2>(0, 2) = pos_vel;
     this->block<2, 2>(2, 0) = pos_vel.transpose();
   }
-  FrenetStateCovarianceMatrix2D(const RealType ll, const RealType dd,
-                                const RealType vlvl, const RealType vdvd,
-                                const RealType ld = 0.0,
-                                const RealType vlvd = 0.0,
-                                const RealType lvl = 0.0,
-                                const RealType lvd = 0.0,
-                                const RealType dvd = 0.0)
+  FrenetStateCovarianceMatrix2D(
+      const RealType ll, const RealType dd, const RealType vlvl,
+      const RealType vdvd, const RealType ld = 0.0, const RealType vlvd = 0.0,
+      const RealType lvl = 0.0, const RealType lvd = 0.0,
+      const RealType dvd = 0.0, const RealType dvl = 0.0)
       : FrenetStateCovarianceMatrix2D(
             FrenetCovarianceMatrix2D(ll, dd, ld),
             FrenetCovarianceMatrix2D(vlvl, vdvd, vlvd),
-            FrenetCovarianceMatrix2D(lvl, dvd, lvd)) {}
+            FrenetCovarianceMatrix2D(lvl, dvd, lvd, dvl)) {}
 
   using Base = Eigen::Matrix<RealType, 4, 4, Eigen::DontAlign>;
 
@@ -418,6 +422,11 @@ struct FrenetStateCovarianceMatrix2D
   const RealType vlvl() const { return (*this)(2, 2); }
   const RealType vdvd() const { return (*this)(3, 3); }
   const RealType vlvd() const { return (*this)(2, 3); }
+
+  const RealType lvl() const { return (*this)(0, 2); }
+  const RealType lvd() const { return (*this)(0, 3); }
+  const RealType dvl() const { return (*this)(1, 2); }
+  const RealType dvd() const { return (*this)(1, 3); }
 };
 // /////////////////////////////////////////////////////////////////////////////
 // Frenet state (mean and covariance matrix)

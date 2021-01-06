@@ -9,6 +9,7 @@
 
 // Python API wrapper
 #include "corridor_assignment_wrapper.hpp"
+#include "corridor_wrapper.hpp"
 #include "cubic_spline_wrapper.hpp"
 #include "unscented_transformation_wrapper.hpp"
 
@@ -25,22 +26,32 @@ BOOST_PYTHON_MODULE(PYTHON_API_MODULE_NAME) {  // NOLINT
       .def("constructFrenetFrames", &CubicSpline::constructFrenetFrames);
 
   // ///////////////////////////////////////////////////////////////////////////
+  // Corridor Wrapper
+  // ///////////////////////////////////////////////////////////////////////////
+  py::class_<CorridorWrapper>(
+      "CorridorWrapper", py::init<int, const py::list&, const py::list&>());
+  // .def("constructCorridor", &CorridorWrapper::construct);
+
+  py::def("TestCorridorHandle", &TestCorridorHandle);
+
+  // ///////////////////////////////////////////////////////////////////////////
   // Polar Uncertainty Transformation Wrapper
   // ///////////////////////////////////////////////////////////////////////////
 
-  py::class_<FlatCartesianStateAndCovMat2D>("FlatCartesianStateAndCovMat2D")
-      .def_readwrite("x", &FlatCartesianStateAndCovMat2D::x)
-      .def_readwrite("y", &FlatCartesianStateAndCovMat2D::y)
-      .def_readwrite("var_x", &FlatCartesianStateAndCovMat2D::var_x)
-      .def_readwrite("var_y", &FlatCartesianStateAndCovMat2D::var_y)
-      .def_readwrite("cov_xy", &FlatCartesianStateAndCovMat2D::cov_xy);
+  py::class_<FlatCartesianPositionAndCovMat2D>(
+      "FlatCartesianPositionAndCovMat2D")
+      .def_readwrite("x", &FlatCartesianPositionAndCovMat2D::x)
+      .def_readwrite("y", &FlatCartesianPositionAndCovMat2D::y)
+      .def_readwrite("var_x", &FlatCartesianPositionAndCovMat2D::var_x)
+      .def_readwrite("var_y", &FlatCartesianPositionAndCovMat2D::var_y)
+      .def_readwrite("cov_xy", &FlatCartesianPositionAndCovMat2D::cov_xy);
 
-  py::class_<FlatPolarStateAndCovMat2D>("FlatPolarStateAndCovMat2D")
-      .def_readwrite("r", &FlatPolarStateAndCovMat2D::r)
-      .def_readwrite("phi", &FlatPolarStateAndCovMat2D::phi)
-      .def_readwrite("var_r", &FlatPolarStateAndCovMat2D::var_r)
-      .def_readwrite("var_phi", &FlatPolarStateAndCovMat2D::var_phi)
-      .def_readwrite("cov_rphi", &FlatPolarStateAndCovMat2D::cov_rphi);
+  py::class_<FlatPolarPositionAndCovMat2D>("FlatPolarPositionAndCovMat2D")
+      .def_readwrite("r", &FlatPolarPositionAndCovMat2D::r)
+      .def_readwrite("phi", &FlatPolarPositionAndCovMat2D::phi)
+      .def_readwrite("var_r", &FlatPolarPositionAndCovMat2D::var_r)
+      .def_readwrite("var_phi", &FlatPolarPositionAndCovMat2D::var_phi)
+      .def_readwrite("cov_rphi", &FlatPolarPositionAndCovMat2D::cov_rphi);
 
   def("cartesian_to_polar_2d", &pyCartesianToPolarTransformation2D);
   def("polar_to_cartesian_2d", &pyPolarToCartesianTransformation2D);

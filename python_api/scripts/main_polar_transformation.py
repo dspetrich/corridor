@@ -108,7 +108,7 @@ confidence_ellipse(ax_polar, polar_mean, polar_cov,
 
 
 # Unscented tranformation
-cart_state = corridor.FlatCartesianStateAndCovMat2D()
+cart_state = corridor.FlatCartesianPositionAndCovMat2D()
 cart_state.x = cart_mean[0]
 cart_state.y = cart_mean[1]
 cart_state.var_x = cart_cov[0, 0]

@@ -16,8 +16,7 @@ namespace cubic_spline {
  *
  * @param data_segment: spline segment on the cubic spline
  * @param arc_length: local arc-length on spline segment
- * @return Basic2dPoint<RealType
- *>: resulting point on spline segments
+ * @return Basic2dPoint<RealType: resulting point on spline segments
  */
 CartesianPoint2D EvaluatePosition(const DataSegment<RealType>& data_segment,
                                   const RealType arc_length);

@@ -48,13 +48,13 @@ TEST_F(FrenetPolylineTest, Curved) {
   EXPECT_EQ(left_polyline.size(), curved_lanelet_.left_boundary.size());
 
   EXPECT_FLOAT_EQ(left_polyline[0].l(), -1.82352948);
-  EXPECT_FLOAT_EQ(left_polyline[1].l(), 0.31910014);
-  EXPECT_FLOAT_EQ(left_polyline[2].l(), 2.0599406);
-  EXPECT_FLOAT_EQ(left_polyline[3].l(), 3.8812499);
+  EXPECT_FLOAT_EQ(left_polyline[1].l(), 0.31897849);
+  EXPECT_FLOAT_EQ(left_polyline[2].l(), 2.0597572);
+  EXPECT_FLOAT_EQ(left_polyline[3].l(), 3.8812857);
   EXPECT_FLOAT_EQ(left_polyline[4].l(), 6.605114);
-  EXPECT_FLOAT_EQ(left_polyline[5].l(), 9.3289785);
-  EXPECT_FLOAT_EQ(left_polyline[6].l(), 11.150288);
-  EXPECT_FLOAT_EQ(left_polyline[7].l(), 12.891129);
+  EXPECT_FLOAT_EQ(left_polyline[5].l(), 9.3288383);
+  EXPECT_FLOAT_EQ(left_polyline[6].l(), 11.150427);
+  EXPECT_FLOAT_EQ(left_polyline[7].l(), 12.891085);
   EXPECT_FLOAT_EQ(left_polyline[8].l(), 15.033757);
 
   EXPECT_FLOAT_EQ(left_polyline[0].d(), 1.29411769);
@@ -74,11 +74,11 @@ TEST_F(FrenetPolylineTest, Curved) {
 
   EXPECT_FLOAT_EQ(right_polyline[0].l(), -2.64705896);
   EXPECT_FLOAT_EQ(right_polyline[1].l(), -0.411764711);
-  EXPECT_FLOAT_EQ(right_polyline[2].l(), 1.4562994);
-  EXPECT_FLOAT_EQ(right_polyline[3].l(), 3.5452135);
-  EXPECT_FLOAT_EQ(right_polyline[4].l(), 6.6175189);
-  EXPECT_FLOAT_EQ(right_polyline[5].l(), 9.6650152);
-  EXPECT_FLOAT_EQ(right_polyline[6].l(), 11.753929);
+  EXPECT_FLOAT_EQ(right_polyline[2].l(), 1.4561728);
+  EXPECT_FLOAT_EQ(right_polyline[3].l(), 3.5453079);
+  EXPECT_FLOAT_EQ(right_polyline[4].l(), 6.6058898);
+  EXPECT_FLOAT_EQ(right_polyline[5].l(), 9.6649895);
+  EXPECT_FLOAT_EQ(right_polyline[6].l(), 11.753894);
   EXPECT_FLOAT_EQ(right_polyline[7].l(), 13.621993);
   EXPECT_FLOAT_EQ(right_polyline[8].l(), 15.857287);
 
@@ -86,7 +86,7 @@ TEST_F(FrenetPolylineTest, Curved) {
   EXPECT_FLOAT_EQ(right_polyline[1].d(), -1.35294116);
   EXPECT_FLOAT_EQ(right_polyline[2].d(), -1.28179097);
   EXPECT_FLOAT_EQ(right_polyline[3].d(), -1.06581819);
-  EXPECT_FLOAT_EQ(right_polyline[4].d(), -1.0000018);
+  EXPECT_FLOAT_EQ(right_polyline[4].d(), -1.0);
   EXPECT_FLOAT_EQ(right_polyline[5].d(), -1.06581807);
   EXPECT_FLOAT_EQ(right_polyline[6].d(), -1.28179049);
   EXPECT_FLOAT_EQ(right_polyline[7].d(), -1.35294092);
@@ -106,11 +106,10 @@ TEST_F(FrenetPolylineTest, Interpolation) {
   const auto d_10 = left_polyline.deviationAt(10.0);
   EXPECT_LT(d_10, left_polyline[5].d());
   EXPECT_GT(d_10, left_polyline[6].d());
-  EXPECT_FLOAT_EQ(d_10, 1.6338902);
+  EXPECT_FLOAT_EQ(d_10, 1.6338842);
 
   auto right_polyline =
       curved_cubic_spline_.toFrenetPolyline(curved_lanelet_.right_boundary);
-  std::cout << right_polyline.deviationAt(10.0) << std::endl;
 
   const auto d2_tooShort = right_polyline.deviationAt(-3.0);
   EXPECT_FLOAT_EQ(d2_tooShort, right_polyline[0].d());
@@ -121,5 +120,5 @@ TEST_F(FrenetPolylineTest, Interpolation) {
   const auto d2_10 = right_polyline.deviationAt(10.0);
   EXPECT_LT(d2_10, right_polyline[5].d());
   EXPECT_GT(d2_10, right_polyline[6].d());
-  EXPECT_FLOAT_EQ(d2_10, -1.1004523);
+  EXPECT_FLOAT_EQ(d2_10, -1.1004552);
 }

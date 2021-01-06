@@ -85,7 +85,7 @@ def approximation_error(radius, var_radius, heading, var_heading, cov_radHead):
     polar_cov = np.cov(polar_data)
 
     # Unscented tranformation from cartesian to polar
-    cart_state = corridor.FlatCartesianStateAndCovMat2D()
+    cart_state = corridor.FlatCartesianPositionAndCovMat2D()
     cart_state.x = cart_mean[0]
     cart_state.y = cart_mean[1]
     cart_state.var_x = cart_cov[0, 0]

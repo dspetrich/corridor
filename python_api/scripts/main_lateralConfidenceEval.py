@@ -6,6 +6,22 @@ import scipy.stats as stats
 import math
 import corridor
 
+matplotlib.rcParams.update({
+    "pgf.texsystem": "pdflatex",
+    'font.family': 'serif',
+    'font.size': '10',
+    'text.usetex': True,
+    'pgf.rcfonts': False,
+    'figure.autolayout': True,
+    # 'figure.figsize': [7, 4],
+    'axes.titlesize': 'medium',
+    'xtick.labelsize': 'small',
+    'ytick.labelsize': 'small',
+    'legend.fontsize': 'x-small',
+    'legend.title_fontsize': 'small',
+    # 'axes.labelsize': 'small',
+})
+
 
 def create_corridor_boundary_pts(w_c, x_max):
     c_x = ()
@@ -173,9 +189,12 @@ plt.setp(ax4.get_yticklabels(), visible=True)
 
 plt.setp([ax1], title='Fixed object width, variable standard deviation')
 plt.setp([ax3], title='Fixed standard deviation, variable object width')
-plt.setp([ax2], title='Assignment likelihood function')
-plt.setp([ax4], title='Assignment likelihood function')
-fig.suptitle('Lateral Assignment', size=20)
-gs.tight_layout(fig, rect=[0, 0, 1, 0.97])
+plt.setp([ax2], title='Assignment confidence function')
+plt.setp([ax4], title='Assignment confidence function')
+# fig.suptitle('Lateral Assignment', size=20)
+# gs.tight_layout(fig, rect=[0, 0, 1, 0.97])
+
+plt.savefig(
+    '/home/dsp/Pictures/Matplotlib_PGFs/LateralAssignment.pgf')
 
 plt.show()

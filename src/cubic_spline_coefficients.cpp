@@ -3,6 +3,10 @@
 namespace corridor {
 namespace cubic_spline {
 
+// /////////////////////////////////////////////////////////////////////////////
+// Coefficients2d
+// /////////////////////////////////////////////////////////////////////////////
+
 Coefficients2d::Coefficients2d(const DataColumn<RealType>& q1,
                                const DataColumn<RealType>& q2) {
   const DataColumn<RealType> delta_q = q2 - q1;
@@ -23,6 +27,9 @@ Coefficients2d::Coefficients2d(const DataColumn<RealType>& q1,
   max_length = delta_q(kArcLength);
 }
 
+// /////////////////////////////////////////////////////////////////////////////
+// Arc-length approximation utilities
+// /////////////////////////////////////////////////////////////////////////////
 RealType ApproxArclengthNewtonCotes(const Coefficients2d& coeffs,
                                     const RealType approx_h) {
   static RealType weight[7] = {41.f, 216.f, 27.f, 272.f, 27.f, 216.f, 41.f};
@@ -34,7 +41,7 @@ RealType ApproxArclengthNewtonCotes(const Coefficients2d& coeffs,
   for (int k = 0; k < 7; k++) {
     u = static_cast<RealType>(k / 6.f * approx_h);
 
-    t_vec = coeffs.interpolateTangent(u);
+    t_vec = coeffs.interpolateTangent(u, false);
 
     new_h += weight[k] / 840.f * t_vec.norm();
   }
@@ -101,8 +108,8 @@ RealType IntegralLegendreGauss(const Coefficients2d& coeffs,
   RealType res_val = 0.0;
   //! function values
   for (int i = 0; i < 3; i++) {
-    res_val +=
-        weights[i] * coeffs.interpolateTangent(var_1 * p[i] + var_2).norm();
+    res_val += weights[i] *
+               coeffs.interpolateTangent(var_1 * p[i] + var_2, false).norm();
   }
 
   return res_val * var_1;

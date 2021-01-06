@@ -72,6 +72,11 @@ struct CovarianceMatrix2D
                      const RealType xy = 0.0) {
     (*this) << xx, xy, xy, yy;
   }
+  // Constructor for off-diagonal matrix contained in a bigger CovMat
+  CovarianceMatrix2D(const RealType xx, const RealType yy,
+                     const RealType xy, const RealType yx) {
+    (*this) << xx, xy, yx, yy;
+  }
 
   using Base = Eigen::Matrix<RealType, 2, 2, Eigen::DontAlign>;
 
@@ -92,6 +97,7 @@ struct CovarianceMatrix2D
   const RealType xx() const { return (*this)(0, 0); }
   const RealType yy() const { return (*this)(1, 1); }
   const RealType xy() const { return (*this)(0, 1); }
+  const RealType yx() const { return (*this)(1, 0); }
 };
 
 struct CartesianStateCovarianceMatrix2D
@@ -105,7 +111,7 @@ struct CartesianStateCovarianceMatrix2D
     this->block<2, 2>(0, 0) = pos;
     this->block<2, 2>(2, 2) = vel;
     this->block<2, 2>(0, 2) = pos_vel;
-    this->block<2, 2>(2, 0) = pos_vel;
+    this->block<2, 2>(2, 0) = pos_vel.transpose();
   }
 
   using Base = Eigen::Matrix<RealType, 4, 4, Eigen::DontAlign>;

@@ -24,6 +24,20 @@ using BoundaryDistances = std::pair<RealType, RealType>;
 class Corridor {
  public:
   Corridor() {}
+
+  /**
+   * @brief Construct a new Corridor object with constant distance to the left
+   * and right boundary
+   *
+   * @param id corridor id
+   * @param reference_line_pts polyline which represents the reference line
+   * @param distance_left_boundary distance to left boundary (without sign)
+   * @param distance_right_boundary distance to right boundary (without sign)
+   */
+  Corridor(const IdType id, const CartesianPoints2D& reference_line_pts,
+           const RealType distance_left_boundary,
+           const RealType distance_right_boundary);
+
   /**
    * @brief Construct a new Corridor object with natural (free) spline boundary
    * conditions.
@@ -49,10 +63,10 @@ class Corridor {
    * @param last_tangent         tangent vector of the last reference line point
    */
   Corridor(const IdType id, const CartesianPoints2D& reference_line_pts,
-           const CartesianPoints2D& left_boundary_pts,
-           const CartesianPoints2D& right_boundary_pts,
            const CartesianVector2D& first_tangent,
-           const CartesianVector2D& last_tangent);
+           const CartesianVector2D& last_tangent,
+           const CartesianPoints2D& left_boundary_pts,
+           const CartesianPoints2D& right_boundary_pts);
 
   //! Get the unique id of underlying reference line
   IdType id() const noexcept { return referenceLine_.GetId(); }

@@ -30,6 +30,19 @@ inline cr::CartesianVector2D to_cartesian_vector(const py::list& py_list) {
   return CartesianVector2D(std_vec.front(), std_vec.back());
 }
 
+inline cr::CartesianPoints2D toCartesianPoints(const py::list& node_x,
+                                               const py::list& node_y) {
+  using namespace corridor;
+  std::vector<RealType> x_vec = to_std_vector<RealType>(node_x);
+  std::vector<RealType> y_vec = to_std_vector<RealType>(node_y);
+
+  cr::CartesianPoints2D points;
+  for (int i = 0, n = x_vec.size(); i < n; i++) {
+    points.emplace_back(x_vec[i], y_vec[i]);
+  }
+  return points;
+}
+
 inline py::dict to_py_dict(const cs::SplineCoefficients2d& coeffs) {
   py::dict dict;
 
@@ -89,13 +102,9 @@ struct CubicSpline {
   py::dict naturalSplineParameter(const py::list& node_x,
                                   const py::list& node_y) {
     using namespace corridor;
-    std::vector<RealType> x_vec = to_std_vector<RealType>(node_x);
-    std::vector<RealType> y_vec = to_std_vector<RealType>(node_y);
 
-    cr::CartesianPoints2D points;
-    for (int i = 0, n = x_vec.size(); i < n; i++) {
-      points.emplace_back(x_vec[i], y_vec[i]);
-    }
+    CartesianPoints2D points = toCartesianPoints(node_x, node_y);
+
     // Create natural spline from points
     data_matrix = cs::NaturalSplineDataMatrixFromPoints(points);
 
@@ -115,17 +124,12 @@ struct CubicSpline {
     return py_dict;
   }
 
-  py::dict clampedSplineParameter(const py::list& py_node_x,
-                                  const py::list& py_node_y,
+  py::dict clampedSplineParameter(const py::list& node_x,
+                                  const py::list& node_y,
                                   const py::list& py_first_tangent,
                                   const py::list& py_last_tangent) {
     using namespace corridor;
-    std::vector<RealType> x_vec = to_std_vector<RealType>(py_node_x);
-    std::vector<RealType> y_vec = to_std_vector<RealType>(py_node_y);
-    CartesianPoints2D points;
-    for (int i = 0, n = x_vec.size(); i < n; i++) {
-      points.emplace_back(x_vec[i], y_vec[i]);
-    }
+    CartesianPoints2D points = toCartesianPoints(node_x, node_y);
 
     CartesianVector2D first_tangent = to_cartesian_vector(py_first_tangent);
     CartesianVector2D last_tangent = to_cartesian_vector(py_last_tangent);

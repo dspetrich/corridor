@@ -1,3 +1,4 @@
+import tikzplotlib
 import matplotlib
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
@@ -7,6 +8,22 @@ import numpy as np
 import scipy.stats as stats
 import math
 import corridor
+
+matplotlib.rcParams.update({
+    "pgf.texsystem": "pdflatex",
+    'font.family': 'serif',
+    'font.size': '10',
+    'text.usetex': True,
+    'pgf.rcfonts': False,
+    'figure.autolayout': True,
+    # 'figure.figsize': [7, 4],
+    'axes.titlesize': 'medium',
+    'xtick.labelsize': 'small',
+    'ytick.labelsize': 'small',
+    'legend.fontsize': 'x-small',
+    'legend.title_fontsize': 'small',
+    # 'axes.labelsize': 'small',
+})
 
 
 # 3D plot
@@ -36,12 +53,15 @@ surf = ax.plot_surface(xx, yy, zz, cmap=cm.coolwarm,
                        linewidth=0, antialiased=True,
                        # rstride=10, cstride=10,
                        alpha=0.8)
-# cset = ax.contour(xx, yy, zz, zdir='z', offset=1, cmap=cm.coolwarm)
+# cset = ax.contour(xx, yy, zz, zdir='z', offset=0, cmap=cm.coolwarm)
 cset = ax.contour(xx, yy, zz, zdir='x', offset=20, cmap=cm.coolwarm)
 cset = ax.contour(xx, yy, zz, zdir='y', offset=10, cmap=cm.coolwarm)
 
-ax.set_xlabel('absolute velocity [mps]')
-ax.set_ylabel(r'$\sigma_{velocity}$ [mps]')
+ax.set_xlabel('Absolute velocity $\mathbf{v}_{\mathbf{x}}^C$ [m/s]')
+ax.set_ylabel(r'$\sigma_{\mathbf{v}_{\mathbf{x}}^C}$ [m/s]')
 ax.set_zlabel('Moving Confidence')
+
+plt.savefig(
+    '/home/dsp/Pictures/Matplotlib_PGFs/MovingConfidence.pdf')
 
 plt.show()

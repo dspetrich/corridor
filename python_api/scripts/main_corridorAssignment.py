@@ -9,6 +9,22 @@ import math
 import corridor
 
 
+matplotlib.rcParams.update({
+    "pgf.texsystem": "pdflatex",
+    'font.family': 'serif',
+    'font.size': '10',
+    'text.usetex': True,
+    'pgf.rcfonts': False,
+    'figure.autolayout': True,
+    # 'figure.figsize': [7, 4],
+    'axes.titlesize': 'medium',
+    'xtick.labelsize': 'small',
+    'ytick.labelsize': 'small',
+    'legend.fontsize': 'x-small',
+    'legend.title_fontsize': 'small',
+    # 'axes.labelsize': 'small',
+})
+
 # 3D plot
 fig = plt.figure()
 ax = fig.gca(projection='3d')
@@ -44,8 +60,19 @@ for i in range(nd):
         features.sigma_d = sigma_d[j]
         zz[i, j] = corridor.LateralAssignmentConfidence(features)
 
-surf = ax.plot_surface(xx, yy, zz, cmap=cm.jet,
+surf = ax.plot_surface(xx, yy, zz, cmap=cm.coolwarm,
                        linewidth=0, antialiased=False)
 
+ax.set_xlabel('Lateral displacement $d_{p,r}$ [$m$]')
+ax.set_ylabel('Standard Deviation $\sigma_{d}$ [$m$]')
+ax.set_zlabel('Assignment confidence')
+
+cset = ax.contour(xx, yy, zz, zdir='x', cmap=cm.coolwarm)
+cset = ax.contour(xx, yy, zz, zdir='y', cmap=cm.coolwarm)
+
 # c = ax.pcolormesh(xx, yy, zz, cmap='RdBu')
+# plt.savefig(
+#     '/home/dsp/Pictures/Matplotlib_PGFs/CorridorAssignment.pdf', bbox_inches='tight')
+plt.savefig(
+    '/home/dsp/Pictures/Matplotlib_PGFs/CorridorAssignment.pdf')
 plt.show()

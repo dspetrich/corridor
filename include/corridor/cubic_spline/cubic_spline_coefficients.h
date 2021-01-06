@@ -20,7 +20,8 @@ struct Coefficients2d {
                  const DataColumn<RealType>& q2);
 
   CartesianPoint2D interpolatePosition(const RealType l) const;
-  CartesianPoint2D interpolateTangent(const RealType l) const;
+  CartesianPoint2D interpolateTangent(const RealType l,
+                                      bool normalized = true) const;
   CartesianPoint2D interpolateNormal(const RealType l) const;
   CartesianPoint2D interpolateCurvature(const RealType l) const;
   CartesianPoint2D interpolateCurvatureChangeRate() const;
@@ -31,6 +32,12 @@ struct Coefficients2d {
 
   RealType interpolateSignedCCRValue(const CartesianPoint2D& tangent,
                                      const CartesianPoint2D& ccr) const;
+
+  RealType tangentialProjection(const RealType arc_length,
+                                const CartesianPoint2D& point) const;
+
+  RealType tangentialProjectionNewtonRaphson(
+      const RealType arc_length, const CartesianPoint2D& point) const;
 };
 
 inline std::ostream& operator<<(std::ostream& os,
@@ -57,12 +64,12 @@ inline CartesianPoint2D Coefficients2d::interpolatePosition(
 }
 
 inline CartesianPoint2D Coefficients2d::interpolateTangent(
-    const RealType l) const {
+    const RealType l, bool normalized) const {
   const RealType ll = l * l;
   CartesianPoint2D ret_val;
   ret_val << (b_x + 2 * c_x * l + 3 * d_x * ll),
       (b_y + 2 * c_y * l + 3 * d_y * ll);
-  return ret_val.normalized();
+  return (normalized) ? CartesianPoint2D(ret_val.normalized()) : (ret_val);
 }
 
 inline CartesianPoint2D Coefficients2d::interpolateNormal(
@@ -89,11 +96,8 @@ inline CartesianPoint2D Coefficients2d::interpolateCurvatureChangeRate() const {
 
 inline RealType Coefficients2d::interpolateSignedCurvatureValue(
     const RealType l) const {
-  const RealType ll = l * l;
-  const CartesianPoint2D tangent(b_x + 2 * c_x * l + 3 * d_x * ll,
-                                 b_y + 2 * c_y * l + 3 * d_y * ll);
-  const CartesianPoint2D curvature(c_x * 2.0 + d_x * l * 6.0,
-                                   c_y * 2.0 + d_y * l * 6.0);
+  const CartesianPoint2D tangent = interpolateTangent(l);
+  const CartesianPoint2D curvature = interpolateCurvature(l);
   return interpolateSignedCurvatureValue(tangent, curvature);
 }
 
@@ -117,6 +121,38 @@ inline RealType Coefficients2d::interpolateSignedCCRValue(
       (sign_cur_value >= 0.0) ? (ccr.norm()) : (-ccr.norm());
   return signed_ccr_value;
 }
+
+inline RealType Coefficients2d::tangentialProjection(
+    const RealType arc_length, const CartesianPoint2D& point) const {
+  const CartesianPoint2D origin = interpolatePosition(arc_length);
+  const CartesianPoint2D tangent = interpolateTangent(arc_length);
+  return tangent.dot(point - origin);
+}
+
+inline RealType Coefficients2d::tangentialProjectionNewtonRaphson(
+    const RealType arc_length, const CartesianPoint2D& point) const {
+  // interpolate required curve features at given arc_length
+  const CartesianPoint2D origin = interpolatePosition(arc_length);
+  const CartesianPoint2D tangent = interpolateTangent(arc_length);
+  const CartesianPoint2D normal = interpolateNormal(arc_length);
+  const CartesianPoint2D curvature = interpolateCurvature(arc_length);
+  const RealType signed_curvature =
+      interpolateSignedCurvatureValue(tangent, curvature);
+
+  const CartesianPoint2D delta = point - origin;
+  const RealType projection = tangent.dot(delta);
+  const RealType projection_derivative =
+      signed_curvature * normal.dot(delta) - 1.0;
+
+  if (projection_derivative == 0.0) {
+    return 0.0;
+  }
+  return -(projection / projection_derivative);
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+// Arc-length approximation utilities
+// /////////////////////////////////////////////////////////////////////////////
 
 inline RealType ChordLength(const CartesianPoint2D& p1,
                             const CartesianPoint2D& p2) {

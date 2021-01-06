@@ -1,5 +1,9 @@
 #include "corridor/cubic_spline/cubic_spline_utilities.h"
 
+#include <chrono>
+
+#include "corridor/cubic_spline/cubic_spline_segment_root_finding.h"
+
 namespace corridor {
 namespace cubic_spline {
 
@@ -75,6 +79,7 @@ Eigen::Matrix<RealType, 2, Eigen::Dynamic> TangentsOnNodes(
       data_segment.col(1)[kArcLength] - data_segment.col(0)[kArcLength];
   tangents.block<2, 1>(0, tangents.cols() - 1) =
       EvaluateTangent(data_segment, local_l);
+
   return tangents;
 }
 
@@ -161,66 +166,23 @@ bool FindProjectionOnSegment(const DataSegment<RealType>& data_segment,
                              const CartesianPoint2D& point,
                              const RealType epsilon) {
   const Coefficients2d segment_coeffs(data_segment.col(0), data_segment.col(1));
-  RealType l_min = 0.f;
-  RealType l_max =
-      data_segment.col(1)[kArcLength] - data_segment.col(0)[kArcLength];
-  RealType delta_l = 0.f;
 
-  // Check current arc-length in segment_info against segment boundaries
-  if (segment_info->relative_arc_length <= l_min) {
-    segment_info->relative_arc_length = 0.f;
-    delta_l = TangentialProjection(point, segment_coeffs,
-                                   segment_info->relative_arc_length);
-    if (std::abs(delta_l) < epsilon) {
-      return true;
-    }
-    if (0.0 < delta_l) {
-      return false;
-    }
-  }
-  if (l_max < segment_info->relative_arc_length) {
-    segment_info->relative_arc_length = l_max;
-    delta_l = TangentialProjection(point, segment_coeffs,
-                                   segment_info->relative_arc_length);
-    if (std::abs(delta_l) < epsilon) {
-      return true;
-    }
-    if (0.0 < delta_l) {
-      return false;
-    }
+  // Limit initial arc-length to segment boundaries
+  bool arc_length_limited, inside_segment_boundaries;
+  RealType limited_arc_length;
+  std::tie(arc_length_limited, inside_segment_boundaries, limited_arc_length) =
+      LimitArcLengthToSegmentLimits(
+          segment_coeffs, segment_info->relative_arc_length, point, epsilon);
+  if (arc_length_limited) {
+    segment_info->relative_arc_length = limited_arc_length;
+    return inside_segment_boundaries;
   }
 
-  //! 1) Binary Search (find the closest base point)
-  for (int count = 0; count < 100; count++) {
-    segment_info->relative_arc_length = 0.5f * (l_max - l_min) + l_min;
-    delta_l = TangentialProjection(point, segment_coeffs,
-                                   segment_info->relative_arc_length);
+  const auto root = BrentsMethod(
+      segment_coeffs, segment_info->relative_arc_length, point, epsilon);
+  segment_info->relative_arc_length = root.second;
 
-    if (std::abs(delta_l) < epsilon) {
-      return true;
-    } else if (delta_l > 0.f) {
-      l_min = segment_info->relative_arc_length;
-    } else {
-      l_max = segment_info->relative_arc_length;
-    }
-  }
-
-  // Reset l_min and l_max
-  l_min = 0.f;
-  l_max = data_segment.col(1)[kArcLength] - data_segment.col(0)[kArcLength];
-
-  // Newton's method base projection search
-  for (int count = 0; count < 10; count++) {
-    segment_info->relative_arc_length =
-        limit(segment_info->relative_arc_length + delta_l, l_min, l_max);
-    delta_l = TangentialProjectionNewtonRaphson(
-        point, segment_coeffs, segment_info->relative_arc_length);
-
-    if (std::abs(delta_l) < epsilon) {
-      return true;
-    }
-  }
-  return false;
+  return root.first;
 }
 
 FrenetFrame2D ConstructFrenetFrame(const DataSegment<RealType>& data_segment,

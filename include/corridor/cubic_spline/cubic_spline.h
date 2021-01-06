@@ -50,6 +50,9 @@ class CubicSpline {
     return (data_.cols() == 0) ? (0.0) : (data_.rightCols<1>()(kArcLength));
   }
   RealType GetCurvatureAt(const RealType arc_length) const;
+  RealType GetArclengthAt(const int idx) const {
+    return data_(kArcLength, idx);
+  }
   ///@}
 
   /**

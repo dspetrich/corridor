@@ -8,21 +8,35 @@ namespace cs = corridor::cubic_spline;
 // Corridor
 // /////////////////////////////////////////////////////////////////////////////
 
-Corridor::Corridor(const IdType id, const CartesianPoints2D& centerline_pts,
+Corridor::Corridor(const IdType id, const CartesianPoints2D& reference_line_pts,
+                   const RealType distance_left_boundary,
+                   const RealType distance_right_boundary) {
+  referenceLine_ = cs::CubicSpline(id, reference_line_pts);
+  const auto num_pts = referenceLine_.GetSize();
+  leftBound_ = FrenetPolyline(num_pts);
+  rightBound_ = FrenetPolyline(num_pts);
+  for (int i = 0; i < num_pts; i++) {
+    const auto arc_length = referenceLine_.GetArclengthAt(i);
+    leftBound_.SetPoint(i, {arc_length, distance_left_boundary});
+    rightBound_.SetPoint(i, {arc_length, -distance_right_boundary});
+  }
+}
+
+Corridor::Corridor(const IdType id, const CartesianPoints2D& reference_line_pts,
                    const CartesianPoints2D& left_boundary_pts,
                    const CartesianPoints2D& right_boundary_pts) {
-  referenceLine_ = cs::CubicSpline(id, centerline_pts);
+  referenceLine_ = cs::CubicSpline(id, reference_line_pts);
   leftBound_ = referenceLine_.toFrenetPolyline(left_boundary_pts);
   rightBound_ = referenceLine_.toFrenetPolyline(right_boundary_pts);
 }
 
-Corridor::Corridor(const IdType id, const CartesianPoints2D& centerline_pts,
-                   const CartesianPoints2D& left_boundary_pts,
-                   const CartesianPoints2D& right_boundary_pts,
+Corridor::Corridor(const IdType id, const CartesianPoints2D& reference_line_pts,
                    const CartesianVector2D& first_tangent,
-                   const CartesianVector2D& last_tangent) {
+                   const CartesianVector2D& last_tangent,
+                   const CartesianPoints2D& left_boundary_pts,
+                   const CartesianPoints2D& right_boundary_pts) {
   referenceLine_ =
-      cs::CubicSpline(id, centerline_pts, first_tangent, last_tangent);
+      cs::CubicSpline(id, reference_line_pts, first_tangent, last_tangent);
   leftBound_ = referenceLine_.toFrenetPolyline(left_boundary_pts);
   rightBound_ = referenceLine_.toFrenetPolyline(right_boundary_pts);
 }

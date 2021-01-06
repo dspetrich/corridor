@@ -262,7 +262,7 @@ class PathInteractor(object):
     def setLemniscate(self):
         self.nodes = Points()
         alpha = 100
-        t = np.linspace(0, 2*np.pi, num=30)
+        t = np.linspace(0, 2*np.pi, num=6)
         self.nodes.x = np.round(alpha * np.sqrt(2) *
                                 np.cos(t) / (np.sin(t)**2 + 1), 7)
         self.nodes.y = np.round(alpha * np.sqrt(2) *

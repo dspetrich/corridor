@@ -58,9 +58,9 @@ TEST_F(UnscentedTransformationTest, UT_boxTransformation) {
       sigma_points_.weightsCovMat(), transformed_state.mean,
       transformed_state.covMat, 2);
 
-  // std::cout << "/* transformed_state */" << std::endl;
-  // std::cout << transformed_state.mean << std::endl;
+  std::cout << "/* transformed_state */" << std::endl;
+  std::cout << transformed_state.mean << std::endl;
 
-  // std::cout << "/* transformed_covMat */" << std::endl;
-  // std::cout << transformed_state.covMat << std::endl;
+  std::cout << "/* transformed_covMat */" << std::endl;
+  std::cout << transformed_state.covMat << std::endl;
 }
