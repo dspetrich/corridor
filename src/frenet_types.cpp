@@ -182,35 +182,36 @@ RealType FrenetPolyline::deviationAt(const RealType query_l) const {
     return data_(DataType::kDeviation, data_.cols() - 1);
   }
 
-  //! Find index of closest data point to a given l value.
-  auto start_index = 0;
-  (data_.colwise() - FrenetPoint2D(query_l, 0))
-      .topRows<1>()
-      .colwise()
-      .lpNorm<1>()
-      .minCoeff(&start_index);
+  //! Get index of segment which contains the arc-length
+  DataMatrix::Index index = 0;
+  DataMatrix::Index max_index =
+      data_.cols() - 2;  // first index of last segment
+  const bool valid = (data_.row(kArclength).array() > query_l).maxCoeff(&index);
 
-  //! If query_l is smaller then the l-value of the closest node, shift the
-  //! start index by one
-  const auto s_node = data_(DataType::kArclength, start_index);
-  if (start_index > 0 && query_l < s_node) {
-    start_index--;
+  if (valid) {
+    // Check that always a valid data segment is used
+    index = (0 < index) ? (index - 1) : (index);
+    index = (max_index < index) ? (max_index) : (index);
+  } else {
+    // Arc-length is longer as the refernce line. Use last segment start
+    // index
+    index = (valid) ? (index) : (max_index);
   }
 
-  if (start_index + 1 >= data_.cols()) {
-    return data_(DataType::kDeviation, start_index);
+  if (index + 1 >= data_.cols()) {
+    return data_(DataType::kDeviation, index);
   }
 
-  const auto delta_l = data_(DataType::kArclength, start_index + 1) -
-                       data_(DataType::kArclength, start_index);
+  // Interpolation of the deviation
+  const auto delta_l = data_(DataType::kArclength, index + 1) -
+                       data_(DataType::kArclength, index);
   assert(abs(delta_l) > 1e-3);
-  const auto alpha =
-      (query_l - data_(DataType::kArclength, start_index)) / delta_l;
+  const auto alpha = (query_l - data_(DataType::kArclength, index)) / delta_l;
 
-  const auto delta_d = data_(DataType::kDeviation, start_index + 1) -
-                       data_(DataType::kDeviation, start_index);
+  const auto delta_d = data_(DataType::kDeviation, index + 1) -
+                       data_(DataType::kDeviation, index);
 
-  return delta_d * alpha + data_(DataType::kDeviation, start_index);
+  return delta_d * alpha + data_(DataType::kDeviation, index);
 };
 
 // /////////////////////////////////////////////////////////////////////////////

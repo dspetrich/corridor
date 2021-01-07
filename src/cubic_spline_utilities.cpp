@@ -16,13 +16,13 @@ CartesianPoint2D EvaluatePosition(const DataSegment<RealType>& data_segment,
 CartesianPoint2D EvaluateTangent(const DataSegment<RealType>& data_segment,
                                  const RealType arc_length) {
   const Coefficients2d segment_coeffs(data_segment.col(0), data_segment.col(1));
-  return segment_coeffs.interpolateTangent(arc_length).normalized();
+  return segment_coeffs.interpolateTangent(arc_length, true);
 }
 
 CartesianPoint2D EvaluateNormal(const DataSegment<RealType>& data_segment,
                                 const RealType arc_length) {
   const Coefficients2d segment_coeffs(data_segment.col(0), data_segment.col(1));
-  return segment_coeffs.interpolateNormal(arc_length).normalized();
+  return segment_coeffs.interpolateNormal(arc_length);
 }
 
 CartesianPoint2D EvaluateCurvature(const DataSegment<RealType>& data_segment,

@@ -3,6 +3,7 @@
 #include <boost/python.hpp>
 #include <boost/python/extract.hpp>
 #include <boost/python/numpy.hpp>
+#include <utility>
 
 #include "corridor/cubic_spline/cubic_interpolation_2d.h"
 #include "corridor/cubic_spline/cubic_spline.h"
@@ -92,6 +93,17 @@ inline py::list to_py_list(const cr::FrenetFrames2D& frenet_frames) {
     py_frenet_frames.append(py_frenet_frame);
   }
   return py_frenet_frames;
+}
+
+inline std::pair<py::list, py::list> to_py_lists(
+    const cr::CartesianPoints2D& points) {
+  py::list point_x;
+  py::list point_y;
+  for (const cr::CartesianPoint2D& p : points) {
+    point_x.append(p.x());
+    point_y.append(p.y());
+  }
+  return std::make_pair(point_x, point_y);
 }
 
 // /////////////////////////////////////////////////////////////////////////////

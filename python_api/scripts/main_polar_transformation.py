@@ -54,8 +54,9 @@ def confidence_ellipse(ax, mean, cov_mat, n_std=3, facecolor='none', **kwargs):
 
 
 # Initial 2d cartesian vector with normal distribution
-mean = [0.5, 0.5]
-covMat = [[0.01, 0.5], [0.5, 0.03]]
+mean = [5, 5]
+covMat = [[1, 0.5],
+          [0.5, 2]]
 
 
 # Draw cartesian samples

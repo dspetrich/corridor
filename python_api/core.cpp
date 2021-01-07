@@ -28,14 +28,15 @@ BOOST_PYTHON_MODULE(PYTHON_API_MODULE_NAME) {  // NOLINT
   // ///////////////////////////////////////////////////////////////////////////
   // Corridor Wrapper
   // ///////////////////////////////////////////////////////////////////////////
-  py::class_<CorridorWrapper>(
-      "CorridorWrapper", py::init<int, const py::list&, const py::list&>());
-  // .def("constructCorridor", &CorridorWrapper::construct);
+  py::class_<CorridorWrapper>("CorridorWrapper",
+                              py::init<int, const py::list&, const py::list&>())
+      .def("get_polylines", &CorridorWrapper::GetCartesianPolylinesLines)
+      .def("to_frenet_state_vector", &CorridorWrapper::ToFrenetStateVector);
 
   py::def("TestCorridorHandle", &TestCorridorHandle);
 
   // ///////////////////////////////////////////////////////////////////////////
-  // Polar Uncertainty Transformation Wrapper
+  //  UT Wrapper
   // ///////////////////////////////////////////////////////////////////////////
 
   py::class_<FlatCartesianPositionAndCovMat2D>(
@@ -57,6 +58,42 @@ BOOST_PYTHON_MODULE(PYTHON_API_MODULE_NAME) {  // NOLINT
   def("polar_to_cartesian_2d", &pyPolarToCartesianTransformation2D);
   boost::python::def("ut_cartesian_to_polar_2d",
                      &UnscentedTransformationPolarCoordinate2D);
+
+  py::class_<FlatCartesianStateAndCovMat2D>("FlatCartesianStateAndCovMat2D")
+      .def_readwrite("x", &FlatCartesianStateAndCovMat2D::x)
+      .def_readwrite("y", &FlatCartesianStateAndCovMat2D::y)
+      .def_readwrite("vx", &FlatCartesianStateAndCovMat2D::vx)
+      .def_readwrite("vy", &FlatCartesianStateAndCovMat2D::vy)
+      .def_readwrite("var_x", &FlatCartesianStateAndCovMat2D::var_x)
+      .def_readwrite("var_y", &FlatCartesianStateAndCovMat2D::var_y)
+      .def_readwrite("var_vx", &FlatCartesianStateAndCovMat2D::var_vx)
+      .def_readwrite("var_vy", &FlatCartesianStateAndCovMat2D::var_vy)
+      .def_readwrite("cov_xy", &FlatCartesianStateAndCovMat2D::cov_xy)
+      .def_readwrite("cov_xvx", &FlatCartesianStateAndCovMat2D::cov_xvx)
+      .def_readwrite("cov_xvy", &FlatCartesianStateAndCovMat2D::cov_xvy)
+      .def_readwrite("cov_yvx", &FlatCartesianStateAndCovMat2D::cov_yvx)
+      .def_readwrite("cov_yvy", &FlatCartesianStateAndCovMat2D::cov_yvy)
+      .def_readwrite("cov_vxvy", &FlatCartesianStateAndCovMat2D::cov_vxvy);
+
+  py::class_<FlatFrenetStateAndCovMat2D>("FlatFrenetStateAndCovMat2D")
+      .def_readwrite("l", &FlatFrenetStateAndCovMat2D::l)
+      .def_readwrite("d", &FlatFrenetStateAndCovMat2D::d)
+      .def_readwrite("vl", &FlatFrenetStateAndCovMat2D::vl)
+      .def_readwrite("vd", &FlatFrenetStateAndCovMat2D::vd)
+      .def_readwrite("var_d", &FlatFrenetStateAndCovMat2D::var_d)
+      .def_readwrite("var_l", &FlatFrenetStateAndCovMat2D::var_l)
+      .def_readwrite("var_vd", &FlatFrenetStateAndCovMat2D::var_vd)
+      .def_readwrite("var_vl", &FlatFrenetStateAndCovMat2D::var_vl)
+      .def_readwrite("cov_ld", &FlatFrenetStateAndCovMat2D::cov_ld)
+      .def_readwrite("cov_lvl", &FlatFrenetStateAndCovMat2D::cov_lvl)
+      .def_readwrite("cov_lvd", &FlatFrenetStateAndCovMat2D::cov_lvd)
+      .def_readwrite("cov_dvl", &FlatFrenetStateAndCovMat2D::cov_dvl)
+      .def_readwrite("cov_dvd", &FlatFrenetStateAndCovMat2D::cov_dvd)
+      .def_readwrite("cov_vlvd", &FlatFrenetStateAndCovMat2D::cov_vlvd);
+
+  // UnscentedStateTransformation
+  boost::python::def("ut_cartesian_frenet_transformation",
+                     &UnscentedStateTransformation);
 
   // ///////////////////////////////////////////////////////////////////////////
   // Corridor Assignment Wrapper

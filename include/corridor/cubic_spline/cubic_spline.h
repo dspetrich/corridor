@@ -49,8 +49,10 @@ class CubicSpline {
   inline RealType GetTotalLength() const {
     return (data_.cols() == 0) ? (0.0) : (data_.rightCols<1>()(kArcLength));
   }
+  CartesianPoint2D GetPositionAt(const RealType arc_length) const;
+  CartesianVector2D GetNormalVectorAt(const RealType arc_length) const;
   RealType GetCurvatureAt(const RealType arc_length) const;
-  RealType GetArclengthAt(const int idx) const {
+  RealType GetArclengthAtIndex(const int idx) const {
     return data_(kArcLength, idx);
   }
   ///@}
@@ -104,6 +106,15 @@ class CubicSpline {
   bool constructSplineData(const CartesianPoints2D& points,
                            const CartesianVector2D& first_tangent,
                            const CartesianVector2D& last_tangent);
+
+  /**
+   * @brief Get the Segment Index At Arc Length object
+   *
+   * @param arc_length
+   * @return const DataMatrix<RealType>::Index
+   */
+  const DataMatrix<RealType>::Index GetSegmentIndexAtArcLength(
+      const RealType arc_length) const noexcept;
 
   /**
    * @brief ToString: Debug information

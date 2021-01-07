@@ -46,22 +46,37 @@ bool CubicSpline::constructSplineData(const CartesianPoints2D& points,
   return true;
 }
 
-RealType CubicSpline::GetCurvatureAt(const RealType arc_length) const {
-  DataMatrix<RealType>::Index index;
-  // Get index which is larger than the query arc_length
-  const bool valid =
-      (data_.row(kArcLength).array() > arc_length).maxCoeff(&index);
-  if (!valid) {
-    // Arc-length is longer as the refernce line. Return zero curvature (natural
-    // spline assumption!)
-    return 0.0;
-  }
-  // Check that always a valid data segment is used
-  index = (0 < index) ? (index - 1) : (index);
-  index = (data_.cols() - 2 < index) ? (data_.cols() - 2) : (index);
+CartesianPoint2D CubicSpline::GetPositionAt(const RealType arc_length) const {
+  // Get segment index
+  DataMatrix<RealType>::Index index = GetSegmentIndexAtArcLength(arc_length);
 
+  // Construct segment data
   const DataSegment<RealType>& data_segment =
       data_.block<kSize, 2>(kPoint_x, index);
+  const RealType relative_arc_length = arc_length - data_segment(kArcLength, 0);
+  return EvaluatePosition(data_segment, relative_arc_length);
+}
+
+CartesianPoint2D CubicSpline::GetNormalVectorAt(
+    const RealType arc_length) const {
+  // Get segment index
+  DataMatrix<RealType>::Index index = GetSegmentIndexAtArcLength(arc_length);
+
+  // Construct segment data
+  const DataSegment<RealType>& data_segment =
+      data_.block<kSize, 2>(kPoint_x, index);
+  const RealType relative_arc_length = arc_length - data_segment(kArcLength, 0);
+  return EvaluateNormal(data_segment, relative_arc_length);
+}
+
+RealType CubicSpline::GetCurvatureAt(const RealType arc_length) const {
+  // Get segment index
+  DataMatrix<RealType>::Index index = GetSegmentIndexAtArcLength(arc_length);
+
+  // Construct segment data
+  const DataSegment<RealType>& data_segment =
+      data_.block<kSize, 2>(kPoint_x, index);
+
   const RealType relative_arc_length = arc_length - data_segment(kArcLength, 0);
 
   return InterpolateSignedCurvatureValue(data_segment, relative_arc_length);
@@ -89,6 +104,23 @@ FrenetPolyline CubicSpline::toFrenetPolyline(
   return ConvertToFrenetPolyline(data_, points);
 }
 
+const DataMatrix<RealType>::Index CubicSpline::GetSegmentIndexAtArcLength(
+    const RealType arc_length) const noexcept {
+  DataMatrix<RealType>::Index index = 0;
+  DataMatrix<RealType>::Index max_index = data_.cols() - 2;
+  // Get index which is larger than the query arc_length
+  const bool valid =
+      (data_.row(kArcLength).array() > arc_length).maxCoeff(&index);
+  if (!valid) {
+    // Arc-length is longer as the refernce line. Return last segment
+    return max_index;
+  }
+  // Check that always a valid data segment is used
+  index = (0 < index) ? (index - 1) : (index);
+  index = (max_index < index) ? (max_index) : (index);
+  return index;
+}
+
 std::string CubicSpline::ToString(const bool print_header) const {
   std::ostringstream out;
   out << "CubicSpline: " << id_ << " \n";
@@ -100,5 +132,6 @@ std::string CubicSpline::ToString(const bool print_header) const {
         << "\t" << data_(kMoment_x, idx) << "\t" << data_(kMoment_y, idx)
         << "\t" << data_(kArcLength, idx) << std::endl;
   }
+
   return out.str();
 }

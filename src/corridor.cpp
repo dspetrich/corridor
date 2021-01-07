@@ -1,5 +1,7 @@
 #include "corridor/corridor.h"
 
+#include "corridor/cubic_spline/cubic_spline_coefficients.h"
+
 namespace corridor {
 
 namespace cs = corridor::cubic_spline;
@@ -16,7 +18,7 @@ Corridor::Corridor(const IdType id, const CartesianPoints2D& reference_line_pts,
   leftBound_ = FrenetPolyline(num_pts);
   rightBound_ = FrenetPolyline(num_pts);
   for (int i = 0; i < num_pts; i++) {
-    const auto arc_length = referenceLine_.GetArclengthAt(i);
+    const auto arc_length = referenceLine_.GetArclengthAtIndex(i);
     leftBound_.SetPoint(i, {arc_length, distance_left_boundary});
     rightBound_.SetPoint(i, {arc_length, -distance_right_boundary});
   }
@@ -82,6 +84,42 @@ std::ostream& operator<<(std::ostream& os, const CorridorPtr& corridor) {
   //   os << " [" << o.first << ": " << o.second << "]";
   // }
   return os;
+}
+
+void Corridor::fillCartesianPolylines(
+    const RealType delta_l, CartesianPoints2D* reference_line,
+    CartesianPoints2D* left_boundary,
+    CartesianPoints2D* right_boundary) const noexcept {
+  reference_line->clear();
+  left_boundary->clear();
+  right_boundary->clear();
+  RealType query_l = 0.0;
+  RealType max_length = referenceLine_.GetTotalLength();
+  while (query_l <= max_length) {
+    const CartesianPoint2D position = referenceLine_.GetPositionAt(query_l);
+    const CartesianVector2D normal = referenceLine_.GetNormalVectorAt(query_l);
+    const RealType d_left = leftBound_.deviationAt(query_l);
+    const RealType d_right = rightBound_.deviationAt(query_l);
+
+    reference_line->emplace_back(position);
+    left_boundary->emplace_back(position + d_left * normal);
+    right_boundary->emplace_back(position + d_right * normal);
+
+    query_l += delta_l;
+  }
+
+  if (query_l > max_length) {
+    // Add last point
+    const CartesianPoint2D position = referenceLine_.GetPositionAt(max_length);
+    const CartesianVector2D normal =
+        referenceLine_.GetNormalVectorAt(max_length);
+    const RealType d_left = leftBound_.deviationAt(max_length);
+    const RealType d_right = rightBound_.deviationAt(max_length);
+
+    reference_line->emplace_back(position);
+    left_boundary->emplace_back(position + d_left * normal);
+    right_boundary->emplace_back(position + d_right * normal);
+  }
 }
 
 // /////////////////////////////////////////////////////////////////////////////

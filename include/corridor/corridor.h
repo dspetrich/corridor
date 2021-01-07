@@ -88,6 +88,11 @@ class Corridor {
   friend std::ostream& operator<<(std::ostream& os,
                                   const CorridorPtr& corridor);
 
+  void fillCartesianPolylines(const RealType delta_l,
+                              CartesianPoints2D* reference_line,
+                              CartesianPoints2D* left_boundary,
+                              CartesianPoints2D* right_boundary) const noexcept;
+
  private:
   // Reference line for the frenet frame. Not necessarily a centerline, but
   // has to be located between the left and right boundary.

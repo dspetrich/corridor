@@ -73,8 +73,8 @@ struct CovarianceMatrix2D
     (*this) << xx, xy, xy, yy;
   }
   // Constructor for off-diagonal matrix contained in a bigger CovMat
-  CovarianceMatrix2D(const RealType xx, const RealType yy,
-                     const RealType xy, const RealType yx) {
+  CovarianceMatrix2D(const RealType xx, const RealType yy, const RealType xy,
+                     const RealType yx) {
     (*this) << xx, xy, yx, yy;
   }
 
@@ -174,6 +174,10 @@ class CartesianState2D {
     return polar_velocity_state->orientation();
   }
 
+  // Introspection
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const CartesianState2D& state);
+
  private:
   CartesianStateVector2D mean_;
   CartesianStateCovarianceMatrix2D cov_mat_;
@@ -182,6 +186,20 @@ class CartesianState2D {
   // constructed if and then cached.
   const PolarStatePtr getPolarVelocityStatePtr();
   PolarStatePtr polar_velocity_state_;
+};
+
+// Introspection
+inline std::ostream& operator<<(std::ostream& os,
+                                const CartesianState2D& state) {
+  using namespace std;
+  os << "Cartesian State Vector: ";
+  os << state.mean_.transpose() << "\n";
+  os << "Cartesian State CovMat:\n";
+  os << state.cov_mat_ << "\n";
+  if (state.polar_velocity_state_ != nullptr) {
+    os << state.polar_velocity_state_;
+  }
+  return os;
 };
 
 /**

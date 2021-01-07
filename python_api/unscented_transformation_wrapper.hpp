@@ -4,6 +4,7 @@
 
 #include "corridor/unscented_transformation/polar_coordinate_transformation.h"
 #include "corridor/unscented_transformation/sigma_points.h"
+#include "corridor/unscented_transformation/state_transformation.h"
 #include "corridor/unscented_transformation/unscented_transformation.h"
 
 // Phython API
@@ -186,3 +187,13 @@ FlatPolarPositionAndCovMat2D UnscentedTransformationPolarCoordinate2D(
 // /////////////////////////////////////////////////////////////////////////////
 // State transformation
 // /////////////////////////////////////////////////////////////////////////////
+
+FlatFrenetStateAndCovMat2D UnscentedStateTransformation(
+    const CorridorWrapper& corridor_wrapper,
+    const FlatCartesianStateAndCovMat2D flat_cartesian_state) {
+  using namespace corridor;
+  namespace ut = unscented_transformation;
+  FrenetState2D frenet_state = ut::ToFrenetState(corridor_wrapper.corridor_,
+                                                 Convert(flat_cartesian_state));
+  return Convert(frenet_state);
+}
