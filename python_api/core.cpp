@@ -31,7 +31,8 @@ BOOST_PYTHON_MODULE(PYTHON_API_MODULE_NAME) {  // NOLINT
   py::class_<CorridorWrapper>("CorridorWrapper",
                               py::init<int, const py::list&, const py::list&>())
       .def("get_polylines", &CorridorWrapper::GetCartesianPolylinesLines)
-      .def("to_frenet_state_vector", &CorridorWrapper::ToFrenetStateVector);
+      .def("to_frenet_state_vector", &CorridorWrapper::ToFrenetStateVector)
+      .def("to_frenet_state", &CorridorWrapper::ToFrenetState);
 
   py::def("TestCorridorHandle", &TestCorridorHandle);
 

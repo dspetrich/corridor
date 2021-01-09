@@ -12,6 +12,23 @@ from splines.AbstractSpline import Points
 from splines.CubicSpline import CubicSpline
 
 
+matplotlib.rcParams.update({
+    "pgf.texsystem": "pdflatex",
+    'font.family': 'serif',
+    'font.size': '10',
+    'text.usetex': True,
+    'pgf.rcfonts': False,
+    'figure.autolayout': True,
+    # 'figure.figsize': [7, 4],
+    'axes.titlesize': 'medium',
+    'xtick.labelsize': 'small',
+    'ytick.labelsize': 'small',
+    'legend.fontsize': 'x-small',
+    'legend.title_fontsize': 'small',
+    # 'axes.labelsize': 'small',
+})
+
+
 def confidence_ellipse(ax, mean, cov_mat, n_std=3, facecolor='none', **kwargs):
     pearson = cov_mat[0, 1]/np.sqrt(cov_mat[0, 0] * cov_mat[1, 1])
     # Using a special case to obtain the eigenvalues of this
@@ -39,13 +56,13 @@ def confidence_ellipse(ax, mean, cov_mat, n_std=3, facecolor='none', **kwargs):
     return ax.add_patch(ellipse)
 
 
-def plot_cartesian_state(ax, cartesian_state):
+def plot_cartesian_state(ax, cartesian_state, **kwargs):
     # ax.plot(cartesian_state["data"][0],
     #         cartesian_state["data"][1], 'g.', alpha=0.3)
 
     ax.plot(cartesian_state["mean"][0], cartesian_state["mean"][1], 'ro')
     confidence_ellipse(ax, cartesian_state["mean"], cartesian_state["cov_mat"],
-                       3, facecolor='none', zorder=10, edgecolor='r')
+                       3, facecolor='none', zorder=10, edgecolor='r', **kwargs)
 
     ax.arrow(cartesian_state["mean"][0], cartesian_state["mean"][1],
              cartesian_state["mean"][2], cartesian_state["mean"][3],
@@ -54,7 +71,26 @@ def plot_cartesian_state(ax, cartesian_state):
     velocity_mean = cartesian_state["mean"][:2] + cartesian_state["mean"][-2:]
     velocity_cov_mat = cartesian_state["cov_mat"][-2:, -2:]
     confidence_ellipse(ax, velocity_mean, velocity_cov_mat,
-                       3, facecolor='none', zorder=10, edgecolor='b')
+                       3, facecolor='none', zorder=10, edgecolor='b', **kwargs)
+
+
+def plot_frenet_state(ax, frenet_state, **kwargs):
+    # if len(frenet_state["data"]) > 0:
+    #     ax.plot(frenet_state["data"][0],
+    #             frenet_state["data"][1], 'g.', alpha=0.3)
+
+    ax.plot(frenet_state["mean"][0], frenet_state["mean"][1], 'ro')
+    confidence_ellipse(ax, frenet_state["mean"], frenet_state["cov_mat"],
+                       3, facecolor='none', zorder=10, edgecolor='r', **kwargs)
+
+    ax.arrow(frenet_state["mean"][0], frenet_state["mean"][1],
+             frenet_state["mean"][2], frenet_state["mean"][3],
+             head_width=.3, head_length=.5, fc='b', hatch='o')
+
+    velocity_mean = frenet_state["mean"][:2] + frenet_state["mean"][-2:]
+    velocity_cov_mat = frenet_state["cov_mat"][-2:, -2:]
+    confidence_ellipse(ax, velocity_mean, velocity_cov_mat,
+                       3, facecolor='none', zorder=10, edgecolor='b', **kwargs)
 
 
 def lemniscate(alpha, num_nodes):
@@ -110,7 +146,76 @@ def flat_cartesian_state(cartesian_state):
     return state
 
 
+def to_frenet_state(flat_frenet_state):
+    mean = np.array([flat_frenet_state.l,
+                     flat_frenet_state.d,
+                     flat_frenet_state.vl,
+                     flat_frenet_state.vd])
+
+    cov_mat = np.array([[flat_frenet_state.var_l, flat_frenet_state.cov_ld,
+                         flat_frenet_state.cov_lvl,  flat_frenet_state.cov_lvd],
+                        [flat_frenet_state.cov_ld, flat_frenet_state.var_d,
+                         flat_frenet_state.cov_dvl,  flat_frenet_state.cov_dvd],
+                        [flat_frenet_state.cov_lvl, flat_frenet_state.cov_dvl,
+                         flat_frenet_state.var_vl,  flat_frenet_state.cov_vlvd],
+                        [flat_frenet_state.cov_lvd, flat_frenet_state.cov_dvd,
+                         flat_frenet_state.cov_vlvd,  flat_frenet_state.var_vd]])
+
+    frenet_state = dict()
+    frenet_state["data"] = []
+    frenet_state["mean"] = mean
+    frenet_state["cov_mat"] = cov_mat
+
+    # print("UT Frenet state")
+    # print(frenet_state["mean"])
+    # print(frenet_state["cov_mat"])
+
+    return frenet_state
+
+
+def monte_carlo_transformation(moving_frenet_frame_assumption,
+                               corridor_wrapper, cartesian_state):
+    frenet_state_vector_list = list()
+    # Perform transformation
+    for column in cartesian_state["data"].T:
+        frenet_state_vector_list.append(corridor_wrapper.to_frenet_state_vector(
+            column.tolist(), moving_frenet_frame_assumption))
+
+    # Calculate mean and cov mat
+    mc_frenet_states = np.array([np.array(x)
+                                 for x in frenet_state_vector_list]).T
+    # mc_mean = np.mean(mc_frenet_states, axis=1)
+    # mc_cov = np.cov(mc_frenet_states)
+
+    frenet_state = dict()
+    frenet_state["data"] = mc_frenet_states
+    frenet_state["mean"] = np.mean(mc_frenet_states, axis=1)
+    frenet_state["cov_mat"] = np.cov(mc_frenet_states)
+
+    # print("MC Frenet state")
+    # print(frenet_state["mean"])
+    # print(frenet_state["cov_mat"])
+
+    return frenet_state
+
+
+def unscented_transformation(moving_frenet_frame_assumption,
+                             corridor_wrapper, flat_cartesian_state):
+    flat_frenet_state = corridor.ut_cartesian_frenet_transformation(
+        corridor_wrapper, flat_cartesian_state, moving_frenet_frame_assumption)
+    return to_frenet_state(flat_frenet_state)
+
+
+def linearized_tranformation(moving_frenet_frame_assumption, corridor_wrapper, flat_cartesian_state):
+    flat_frenet_state = corridor_wrapper.to_frenet_state(
+        flat_cartesian_state, moving_frenet_frame_assumption)
+    return to_frenet_state(flat_frenet_state)
+
+
 def main():
+
+    moving_frenet_frame_assumption = False
+
     lemniscate_nodes = lemniscate(30, 6)
     corridor_wrapper = corridor.CorridorWrapper(
         456, lemniscate_nodes.x.tolist(), lemniscate_nodes.y.tolist())
@@ -120,23 +225,23 @@ def main():
     polyline_dict = corridor_wrapper.get_polylines(.1)
 
     # Define sample states
-    mean_1 = [-24., 17., 7., -3.]
-    cov_mat_1 = [[2, -.5,   0,  0],
-                 [-.5, 1.5, 0, 0],
-                 [0, 0, 1.1, 0.2],
-                 [0, 0, 0.2, 1.3]]
+    mean_1 = [17., 8., -11., -2.]
+    cov_mat_1 = [[2, .5,   0,  0],
+                 [.5, 1.5, 0, 0],
+                 [0, 0, 0.9, 0.2],
+                 [0, 0, 0.2, 1.1]]
     cartesian_state_1 = state_sample(mean_1, cov_mat_1, 5000)
 
-    mean_2 = [-28., 0., 0., 10.]
+    mean_2 = [-28., 1., -2., 10.]
     cov_mat_2 = [[2, .5,   0,  0],
                  [.5, 1.5, 0, 0],
                  [0, 0, 1.1, 0.2],
                  [0, 0, 0.2, 1.3]]
     cartesian_state_2 = state_sample(mean_2, cov_mat_2, 5000)
 
-    mean_3 = [17., 8., -10., 0.]
-    cov_mat_3 = [[2, .5,   0,  0],
-                 [.5, 1.5, 0, 0],
+    mean_3 = [-24, 17, 8, -1]
+    cov_mat_3 = [[2, -.5,   0,  0],
+                 [-.5, 1.5, 0, 0],
                  [0, 0, 1.1, 0.2],
                  [0, 0, 0.2, 1.3]]
     cartesian_state_3 = state_sample(mean_3, cov_mat_3, 5000)
@@ -146,63 +251,94 @@ def main():
     flat_cartesian_state_3 = flat_cartesian_state(cartesian_state_3)
 
     # Monte Carlo transformation
+    mc_frenet_state_1 = monte_carlo_transformation(
+        moving_frenet_frame_assumption, corridor_wrapper, cartesian_state_1)
+    mc_frenet_state_2 = monte_carlo_transformation(
+        moving_frenet_frame_assumption, corridor_wrapper, cartesian_state_2)
+    mc_frenet_state_3 = monte_carlo_transformation(
+        moving_frenet_frame_assumption, corridor_wrapper, cartesian_state_3)
 
-    # State 1
-    frenet_state_vector_list = list()
-    for column in cartesian_state_1["data"].T:
-        frenet_state_vector_list.append(corridor_wrapper.to_frenet_state_vector(
-            column.tolist()))
-
-    mc_frenet_states = np.array([np.array(x)
-                                 for x in frenet_state_vector_list]).T
-
-    mc_mean = np.mean(mc_frenet_states, axis=1)
-    mc_cov = np.cov(mc_frenet_states)
-    print(mc_mean)
-    print(mc_cov)
-
-    print('before flat_cartesian_state_1')
-    print(flat_cartesian_state_1.vx)
-    print(flat_cartesian_state_1.vy)
     # Unscented transformation
-    ut_frenet_state = corridor.ut_cartesian_frenet_transformation(
-        corridor_wrapper, flat_cartesian_state_1)
+    ut_frenet_state_1 = unscented_transformation(moving_frenet_frame_assumption,
+                                                 corridor_wrapper, flat_cartesian_state_1)
+    ut_frenet_state_2 = unscented_transformation(moving_frenet_frame_assumption,
+                                                 corridor_wrapper, flat_cartesian_state_2)
+    ut_frenet_state_3 = unscented_transformation(moving_frenet_frame_assumption,
+                                                 corridor_wrapper, flat_cartesian_state_3)
 
-    print('after flat_cartesian_state_1')
-    print(flat_cartesian_state_1.vx)
-    print(flat_cartesian_state_1.vy)
+    # Linearized transformation
+    ln_frenet_state_1 = linearized_tranformation(moving_frenet_frame_assumption,
+                                                 corridor_wrapper, flat_cartesian_state_1)
+    ln_frenet_state_2 = linearized_tranformation(moving_frenet_frame_assumption,
+                                                 corridor_wrapper, flat_cartesian_state_2)
+    ln_frenet_state_3 = linearized_tranformation(moving_frenet_frame_assumption,
+                                                 corridor_wrapper, flat_cartesian_state_3)
 
-    print(ut_frenet_state.l)
-    print(ut_frenet_state.d)
-    print(ut_frenet_state.vl)
-    print(ut_frenet_state.vd)
+    # PLOTTING #################################################################
+    subplot_width = [0.5, 0.5]
+    subplot_height = [1]
+    # plt.rc('axes', prop_cycle=(cycler('color', ['m', 'g', 'b', 'c'])))
+    fig = plt.figure()
+    gs = gridspec.GridSpec(2, 1)
+    # , width_ratios=subplot_width,
+    #  height_ratios=subplot_height)
 
-    print(ut_frenet_state.var_l)
-    print(ut_frenet_state.var_d)
+    ax_cart = fig.add_subplot(gs[0, 0], aspect='equal')
+    ax_frenet = fig.add_subplot(gs[1, 0], aspect='equal')
 
-    # print(frenet_state_vector_list)
+    ax_cart.set_title('Cartesian coordinates')
+    ax_frenet.set_title('Frenet coordinates')
+    # axis labels
+    ax_cart.set(xlabel='$x$ [m]')
+    ax_cart.set(ylabel='$y$ [m]')
+    ax_frenet.set(xlabel='$l$ [m]')
+    ax_frenet.set(ylabel='$d$ [m]')
+    ax_cart.plot(lemniscate_nodes.x, lemniscate_nodes.y, 'ok')
 
-    # frenet_state_list = corridor_wrapper.to_frenet_state_vector()
+    # Cartesian plot
 
-    # PLOTTING ########################################
-    fig, ax = plt.subplots()
-    # ax.plot(lemniscate_nodes.x, lemniscate_nodes.y)
+    ax_cart.plot(polyline_dict["reference_line_x"],
+                 polyline_dict["reference_line_y"], 'k-.')
+    ax_cart.plot(polyline_dict["left_boundary_x"],
+                 polyline_dict["left_boundary_y"], color='tab:gray')
+    ax_cart.plot(polyline_dict["right_boundary_x"],
+                 polyline_dict["right_boundary_y"], color='tab:gray')
 
-    # spline object for visualization purposes
-    # spline = CubicSpline('CppCubic', 'g-')
-    # natural_sp = spline.generatePointsFrom(lemniscate_nodes)
-    # ax.plot(natural_sp.x, natural_sp.y)
+    plot_cartesian_state(ax_cart, cartesian_state_1)
+    plot_cartesian_state(ax_cart, cartesian_state_2)
+    plot_cartesian_state(ax_cart, cartesian_state_3)
 
-    ax.plot(polyline_dict["reference_line_x"],
-            polyline_dict["reference_line_y"], 'k-.')
-    ax.plot(polyline_dict["left_boundary_x"],
-            polyline_dict["left_boundary_y"], color='tab:gray')
-    ax.plot(polyline_dict["right_boundary_x"],
-            polyline_dict["right_boundary_y"], color='tab:gray')
+    # Frenet plot
+    ax_frenet.plot([20, 130], [0, 0], 'k-.')
+    ax_frenet.plot([20, 130], [2, 2], color='tab:gray')
+    ax_frenet.plot([20, 130], [-2, -2], color='tab:gray')
 
-    plot_cartesian_state(ax, cartesian_state_1)
-    plot_cartesian_state(ax, cartesian_state_2)
-    plot_cartesian_state(ax, cartesian_state_3)
+    plot_frenet_state(ax_frenet, mc_frenet_state_1)
+    plot_frenet_state(ax_frenet, mc_frenet_state_2)
+    plot_frenet_state(ax_frenet, mc_frenet_state_3)
+
+    plot_frenet_state(ax_frenet, ut_frenet_state_1, linestyle='--')
+    plot_frenet_state(ax_frenet, ut_frenet_state_2, linestyle='--')
+    plot_frenet_state(ax_frenet, ut_frenet_state_3, linestyle='--')
+
+    plot_frenet_state(ax_frenet, ln_frenet_state_1, linestyle='-.')
+    plot_frenet_state(ax_frenet, ln_frenet_state_2, linestyle='-.')
+    plot_frenet_state(ax_frenet, ln_frenet_state_3, linestyle='-.')
+
+    # ax_cart.set_aspect('equal')
+    # ax_frenet.set_aspect('equal')
+
+    ax_cart.set_xlim([-50, 60])
+    ax_cart.set_ylim([-25, 25])
+
+    ax_frenet.set_xlim([20, 130])
+    ax_frenet.set_ylim([-25, 25])
+
+    # ax_cart.set_aspect('equal', adjustable='box')
+    # ax_frenet.set_aspect('equal', adjustable='box')
+
+    plt.savefig(
+        '/home/dsp/Pictures/Matplotlib_PGFs/StateTransformation.pgf')
 
     plt.show()
 

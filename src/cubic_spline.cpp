@@ -90,12 +90,14 @@ FrenetPositionWithFrame CubicSpline::getFrenetPositionWithFrame(
     CartesianPoint2D point) const {
   FrenetPositionsWithFrames positions =
       ConstructFrenetPositionsWithFrames(data_, point, id_);
-  // Get frenet point with smallest absolute distance
+
+  // Get frenet point with smallest displacement from centerline
   FrenetPositionsWithFrames::iterator p_iter = std::min_element(
       positions.begin(), positions.end(),
       [](const FrenetPositionWithFrame& a, const FrenetPositionWithFrame& b) {
-        return a.position.norm() < a.position.norm();
+        return a.position.d_value() < b.position.d_value();
       });
+
   return (*p_iter);
 }
 

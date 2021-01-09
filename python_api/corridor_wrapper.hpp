@@ -3,32 +3,16 @@
 #include <boost/python.hpp>
 
 #include "corridor/corridor.h"
+
+// Phython API
 #include "cubic_spline_wrapper.hpp"
+#include "utility.hpp"
 
 namespace py = boost::python;
 
 // /////////////////////////////////////////////////////////////////////////////
-// Utility functions
+// Corridor wrapper
 // /////////////////////////////////////////////////////////////////////////////
-
-corridor::CartesianStateVector2D convert(
-    const py::list& cartesian_state_vector) {
-  using namespace corridor;
-  return CartesianStateVector2D(
-      py::extract<RealType>(cartesian_state_vector[0]),
-      py::extract<RealType>(cartesian_state_vector[1]),
-      py::extract<RealType>(cartesian_state_vector[2]),
-      py::extract<RealType>(cartesian_state_vector[3]));
-}
-
-py::list convert(const corridor::FrenetStateVector2D& frenet_state_vector) {
-  py::list py_frenet_state_vector;
-  py_frenet_state_vector.append(frenet_state_vector.l());
-  py_frenet_state_vector.append(frenet_state_vector.d());
-  py_frenet_state_vector.append(frenet_state_vector.vl());
-  py_frenet_state_vector.append(frenet_state_vector.vd());
-  return py_frenet_state_vector;
-}
 
 struct CorridorWrapper {
   corridor::Corridor corridor_;
@@ -74,7 +58,8 @@ struct CorridorWrapper {
     return polylines;
   }
 
-  py::list ToFrenetStateVector(const py::list& py_cartesian_state_vector) {
+  py::list ToFrenetStateVector(const py::list& py_cartesian_state_vector,
+                               const bool moving_frenet_frame) {
     using namespace corridor;
     CartesianStateVector2D cartesian_state_vector =
         convert(py_cartesian_state_vector);
@@ -82,10 +67,25 @@ struct CorridorWrapper {
     FrenetFrame2D frenet_frame =
         corridor_.FrenetFrame(cartesian_state_vector.position());
 
-    FrenetStateVector2D frenet_state =
-        frenet_frame.FromCartesianStateVector(cartesian_state_vector);
+    FrenetStateVector2D frenet_state = frenet_frame.FromCartesianStateVector(
+        cartesian_state_vector, moving_frenet_frame);
 
     return convert(frenet_state);
+  }
+
+  FlatFrenetStateAndCovMat2D ToFrenetState(
+      const FlatCartesianStateAndCovMat2D& flat_cartesian_state,
+      const bool moving_frenet_frame) {
+    using namespace corridor;
+    CartesianState2D cartesian_state = Convert(flat_cartesian_state);
+
+    FrenetFrame2D frenet_frame =
+        corridor_.FrenetFrame(cartesian_state.position());
+
+    FrenetState2D frenet_state =
+        frenet_frame.FromCartesianState(cartesian_state, moving_frenet_frame);
+
+    return Convert(frenet_state);
   }
 };
 

@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
+#include <iomanip>
 
 #include "corridor/basic_types.h"
 
@@ -35,8 +36,9 @@ class MerweScaledSigmaPoints {
                          const RealType kappa = 0.0)
       : alpha_(alpha), beta_(beta), kappa_(kappa) {
     // Determine lambda
-    lambda_ = alpha_ * alpha_ * (n_ + kappa_) - n_;
-    sqrt_lambda_n_ = std::sqrt(lambda_ + n_);
+    RealType float_n = static_cast<RealType>(n_);
+    lambda_ = alpha_ * alpha_ * (float_n + kappa_) - float_n;
+    sqrt_lambda_n_ = std::sqrt(lambda_ + float_n);
 
     initializeWeights();
   }
@@ -88,7 +90,7 @@ class MerweScaledSigmaPoints {
   SigmaPtsMatrixType sigma_pts_;
 
   void initializeWeights() {
-    const auto c = 0.5 / (n_ + lambda_);
+    const RealType c = 0.5 / (RealType(n_) + lambda_);
     weights_mean_.fill(c);
     weights_cov_.fill(c);
 

@@ -8,19 +8,20 @@ namespace corridor {
 namespace unscented_transformation {
 
 FrenetState2D ToFrenetState(const Corridor& corridor,
-                            const CartesianState2D cartesian_state) {
+                            const CartesianState2D cartesian_state,
+                            const bool moving_frenet_frame) {
   // State transformation: r_x, r_y, vel_x, vel_y -> r_l, r_d, vel_l, vel_d
-  MerweScaledSigmaPoints<4> sigma_pts_generator;
+  MerweScaledSigmaPoints<4> sigma_pts_generator(0.1);
 
   const auto& sigmas = sigma_pts_generator.generateSigmaPoints(
       cartesian_state.mean(), cartesian_state.covarianceMatrix());
 
   // Transformation function
-  Eigen::MatrixXd transformed_sigmas(sigmas.rows(), sigmas.cols());
+  MerweScaledSigmaPoints<4>::SigmaPtsMatrixType transformed_sigmas;
   for (int i = 0; i < sigmas.cols(); i++) {
     const auto frenet_frame = corridor.FrenetFrame(sigmas.block<2, 1>(0, i));
-    transformed_sigmas.col(i) =
-        frenet_frame.FromCartesianStateVector(sigmas.col(i));
+    transformed_sigmas.col(i) = frenet_frame.FromCartesianStateVector(
+        sigmas.col(i), moving_frenet_frame);
   }
 
   FrenetState2D frenet_state;

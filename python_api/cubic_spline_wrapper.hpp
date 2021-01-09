@@ -9,102 +9,12 @@
 #include "corridor/cubic_spline/cubic_spline.h"
 #include "corridor/cubic_spline/cubic_spline_coefficients.h"
 #include "corridor/cubic_spline/cubic_spline_utilities.h"
+#include "utility.hpp"
 
 namespace py = boost::python;
 namespace np = boost::python::numpy;
 namespace cr = corridor;
 namespace cs = cr::cubic_spline;
-
-// /////////////////////////////////////////////////////////////////////////////
-// Utility functions
-// /////////////////////////////////////////////////////////////////////////////
-
-template <typename T>
-inline std::vector<T> to_std_vector(const py::object& iterable) {
-  return std::vector<T>(py::stl_input_iterator<T>(iterable),
-                        py::stl_input_iterator<T>());
-}
-
-inline cr::CartesianVector2D to_cartesian_vector(const py::list& py_list) {
-  using namespace corridor;
-  std::vector<RealType> std_vec = to_std_vector<RealType>(py_list);
-  return CartesianVector2D(std_vec.front(), std_vec.back());
-}
-
-inline cr::CartesianPoints2D toCartesianPoints(const py::list& node_x,
-                                               const py::list& node_y) {
-  using namespace corridor;
-  std::vector<RealType> x_vec = to_std_vector<RealType>(node_x);
-  std::vector<RealType> y_vec = to_std_vector<RealType>(node_y);
-
-  cr::CartesianPoints2D points;
-  for (int i = 0, n = x_vec.size(); i < n; i++) {
-    points.emplace_back(x_vec[i], y_vec[i]);
-  }
-  return points;
-}
-
-inline py::dict to_py_dict(const cs::SplineCoefficients2d& coeffs) {
-  py::dict dict;
-
-  py::list a_x, b_x, c_x, d_x;
-  py::list a_y, b_y, c_y, d_y;
-  for (const auto& c : coeffs) {
-    a_x.append(c.a_x);
-    b_x.append(c.b_x);
-    c_x.append(c.c_x);
-    d_x.append(c.d_x);
-
-    a_y.append(c.a_y);
-    b_y.append(c.b_y);
-    c_y.append(c.c_y);
-    d_y.append(c.d_y);
-  }
-  dict["a_x"] = a_x;
-  dict["b_x"] = b_x;
-  dict["c_x"] = c_x;
-  dict["d_x"] = d_x;
-
-  dict["a_y"] = a_y;
-  dict["b_y"] = b_y;
-  dict["c_y"] = c_y;
-  dict["d_y"] = d_y;
-
-  return dict;
-}
-
-inline py::dict to_py_dict(const cr::CartesianPoint2D& vector2d) {
-  py::dict py_dict;
-  py_dict["x"] = vector2d.x();
-  py_dict["y"] = vector2d.y();
-  return py_dict;
-}
-
-inline py::list to_py_list(const cr::FrenetFrames2D& frenet_frames) {
-  py::list py_frenet_frames;
-  for (const auto& ff : frenet_frames) {
-    py::dict py_frenet_frame;
-    py_frenet_frame["segm_index"] = ff.frenet_base().segment_info.idx;
-    py_frenet_frame["segm_arc_length"] =
-        ff.frenet_base().segment_info.relative_arc_length;
-    py_frenet_frame["origin"] = to_py_dict(ff.origin());
-    py_frenet_frame["tangent"] = to_py_dict(ff.tangent());
-    py_frenet_frame["normal"] = to_py_dict(ff.normal());
-    py_frenet_frames.append(py_frenet_frame);
-  }
-  return py_frenet_frames;
-}
-
-inline std::pair<py::list, py::list> to_py_lists(
-    const cr::CartesianPoints2D& points) {
-  py::list point_x;
-  py::list point_y;
-  for (const cr::CartesianPoint2D& p : points) {
-    point_x.append(p.x());
-    point_y.append(p.y());
-  }
-  return std::make_pair(point_x, point_y);
-}
 
 // /////////////////////////////////////////////////////////////////////////////
 // Cubic Spline wrapper

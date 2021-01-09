@@ -9,7 +9,8 @@ namespace corridor {
 namespace unscented_transformation {
 
 FrenetState2D ToFrenetState(const Corridor& corridor,
-                            const CartesianState2D cartesian_state);
+                            const CartesianState2D cartesian_state,
+                            const bool moving_frenet_frame = false);
 
 }  // namespace unscented_transformation
 }  // namespace corridor

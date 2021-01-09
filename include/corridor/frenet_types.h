@@ -34,7 +34,7 @@ struct FrenetPoint2D : public BasicPoint2D {
   RealType& l() { return (*this)[0]; }
   RealType& d() { return (*this)[1]; }
 
-  const RealType d_value() const { return std::abs((*this)[0]); }
+  const RealType d_value() const { return std::abs((*this)[1]); }
 };
 using FrenetVector2D = FrenetPoint2D;
 using FrenetPoints2D = std::vector<FrenetPoint2D>;
