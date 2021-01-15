@@ -11,7 +11,7 @@ FrenetState2D ToFrenetState(const Corridor& corridor,
                             const CartesianState2D cartesian_state,
                             const bool moving_frenet_frame) {
   // State transformation: r_x, r_y, vel_x, vel_y -> r_l, r_d, vel_l, vel_d
-  MerweScaledSigmaPoints<4> sigma_pts_generator(0.1);
+  MerweScaledSigmaPoints<4> sigma_pts_generator(1.0);
 
   const auto& sigmas = sigma_pts_generator.generateSigmaPoints(
       cartesian_state.mean(), cartesian_state.covarianceMatrix());

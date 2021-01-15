@@ -37,10 +37,17 @@ class CubicSpline {
       id_ = InvalidId;
     }
   }
-  CubicSpline(const IdType id, const CartesianPoints2D& cartesian_points,
+  CubicSpline(const IdType id, const CartesianPoints2D& points,
               const CartesianVector2D& first_tangent,
               const CartesianVector2D& last_tangent,
-              const RealType epsilon = g_epsilon_arc_length) {}
+              const RealType epsilon = g_epsilon_arc_length)
+      : id_(id), epsilon_(epsilon) {
+    bool result = constructSplineData(points, first_tangent, last_tangent);
+    if (result == false) {
+      // If spline data is corrupted, id is changed to invalid
+      id_ = InvalidId;
+    }
+  }
 
   /** @name Simple public get functions */
   ///@{

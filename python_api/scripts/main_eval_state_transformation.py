@@ -60,16 +60,17 @@ def plot_cartesian_state(ax, cartesian_state, **kwargs):
     # ax.plot(cartesian_state["data"][0],
     #         cartesian_state["data"][1], 'g.', alpha=0.3)
 
-    ax.plot(cartesian_state["mean"][0], cartesian_state["mean"][1], 'ro')
+    ax.plot(cartesian_state["mean"][0], cartesian_state["mean"][1], 'r.')
     confidence_ellipse(ax, cartesian_state["mean"], cartesian_state["cov_mat"],
                        3, facecolor='none', zorder=10, edgecolor='r', **kwargs)
 
-    ax.arrow(cartesian_state["mean"][0], cartesian_state["mean"][1],
-             cartesian_state["mean"][2], cartesian_state["mean"][3],
-             head_width=.3, head_length=.5, fc='b', hatch='o')
-
     velocity_mean = cartesian_state["mean"][:2] + cartesian_state["mean"][-2:]
     velocity_cov_mat = cartesian_state["cov_mat"][-2:, -2:]
+    ax.arrow(cartesian_state["mean"][0], cartesian_state["mean"][1],
+             cartesian_state["mean"][2], cartesian_state["mean"][3],
+             head_width=.3, head_length=.5, fc='k', hatch='o',
+             length_includes_head=True)
+
     confidence_ellipse(ax, velocity_mean, velocity_cov_mat,
                        3, facecolor='none', zorder=10, edgecolor='b', **kwargs)
 
@@ -79,13 +80,14 @@ def plot_frenet_state(ax, frenet_state, **kwargs):
     #     ax.plot(frenet_state["data"][0],
     #             frenet_state["data"][1], 'g.', alpha=0.3)
 
-    ax.plot(frenet_state["mean"][0], frenet_state["mean"][1], 'ro')
+    ax.plot(frenet_state["mean"][0], frenet_state["mean"][1], 'r.')
     confidence_ellipse(ax, frenet_state["mean"], frenet_state["cov_mat"],
                        3, facecolor='none', zorder=10, edgecolor='r', **kwargs)
 
     ax.arrow(frenet_state["mean"][0], frenet_state["mean"][1],
              frenet_state["mean"][2], frenet_state["mean"][3],
-             head_width=.3, head_length=.5, fc='b', hatch='o')
+             head_width=.3, head_length=.5, fc='k', hatch='o',
+             length_includes_head=True)
 
     velocity_mean = frenet_state["mean"][:2] + frenet_state["mean"][-2:]
     velocity_cov_mat = frenet_state["cov_mat"][-2:, -2:]
@@ -122,7 +124,7 @@ def state_sample(mean, cov_mat, num_samples):
     return state
 
 
-def flat_cartesian_state(cartesian_state):
+def to_flat_cartesian_state(cartesian_state):
     mean = cartesian_state["mean"]
     cov_mat = cartesian_state["cov_mat"]
 
@@ -200,22 +202,53 @@ def monte_carlo_transformation(moving_frenet_frame_assumption,
 
 
 def unscented_transformation(moving_frenet_frame_assumption,
-                             corridor_wrapper, flat_cartesian_state):
+                             corridor_wrapper, cartesian_state):
+    flat_cartesian_state = to_flat_cartesian_state(cartesian_state)
     flat_frenet_state = corridor.ut_cartesian_frenet_transformation(
         corridor_wrapper, flat_cartesian_state, moving_frenet_frame_assumption)
     return to_frenet_state(flat_frenet_state)
 
 
-def linearized_tranformation(moving_frenet_frame_assumption, corridor_wrapper, flat_cartesian_state):
+def linearized_tranformation(moving_frenet_frame_assumption, corridor_wrapper, cartesian_state):
+    flat_cartesian_state = to_flat_cartesian_state(cartesian_state)
     flat_frenet_state = corridor_wrapper.to_frenet_state(
         flat_cartesian_state, moving_frenet_frame_assumption)
     return to_frenet_state(flat_frenet_state)
 
 
+def z_test(ground_truth, test):
+    delta_mean = test["mean"] - ground_truth["mean"]
+    inv_delta_cov = np.linalg.inv(
+        np.linalg.inv(test["cov_mat"]) + np.linalg.inv(test["cov_mat"]))
+    t1 = np.dot(delta_mean.T, inv_delta_cov)
+    return np.dot(t1, delta_mean)
+
+
+def generate_transformations(moving_frenet_frame_assumption,
+                             corridor_wrapper, cartesian_states):
+    mc_frenet_states = list()
+    ut_frenet_states = list()
+    ln_frenet_states = list()
+
+    for state in cartesian_states:
+        # Monte Carlo transformation
+        mc_frenet_states.append(monte_carlo_transformation(
+            moving_frenet_frame_assumption, corridor_wrapper, state))
+        # Unscented transformation
+        ut_frenet_states.append(unscented_transformation(
+            moving_frenet_frame_assumption, corridor_wrapper, state))
+        # Linearized transformation
+        ln_frenet_states.append(linearized_tranformation(
+            moving_frenet_frame_assumption, corridor_wrapper, state))
+
+    return mc_frenet_states, ut_frenet_states, ln_frenet_states
+
+
 def main():
 
-    moving_frenet_frame_assumption = False
+    moving_frenet_frame_assumption = True
 
+    # Initialize corridor from lemniscate
     lemniscate_nodes = lemniscate(30, 6)
     corridor_wrapper = corridor.CorridorWrapper(
         456, lemniscate_nodes.x.tolist(), lemniscate_nodes.y.tolist())
@@ -224,121 +257,155 @@ def main():
 
     polyline_dict = corridor_wrapper.get_polylines(.1)
 
-    # Define sample states
-    mean_1 = [17., 8., -11., -2.]
+    # Define states
+    cartesian_states = list()
+
+    mean_1 = [12., 10., -9., -5.]
     cov_mat_1 = [[2, .5,   0,  0],
                  [.5, 1.5, 0, 0],
                  [0, 0, 0.9, 0.2],
                  [0, 0, 0.2, 1.1]]
-    cartesian_state_1 = state_sample(mean_1, cov_mat_1, 5000)
+    cartesian_states.append(state_sample(mean_1, cov_mat_1, 5000))
 
     mean_2 = [-28., 1., -2., 10.]
     cov_mat_2 = [[2, .5,   0,  0],
                  [.5, 1.5, 0, 0],
                  [0, 0, 1.1, 0.2],
                  [0, 0, 0.2, 1.3]]
-    cartesian_state_2 = state_sample(mean_2, cov_mat_2, 5000)
+    cartesian_states.append(state_sample(mean_2, cov_mat_2, 5000))
 
     mean_3 = [-24, 17, 8, -1]
     cov_mat_3 = [[2, -.5,   0,  0],
                  [-.5, 1.5, 0, 0],
                  [0, 0, 1.1, 0.2],
                  [0, 0, 0.2, 1.3]]
-    cartesian_state_3 = state_sample(mean_3, cov_mat_3, 5000)
+    cartesian_states.append(state_sample(mean_3, cov_mat_3, 5000))
 
-    flat_cartesian_state_1 = flat_cartesian_state(cartesian_state_1)
-    flat_cartesian_state_2 = flat_cartesian_state(cartesian_state_2)
-    flat_cartesian_state_3 = flat_cartesian_state(cartesian_state_3)
+    # transformations under assumption A-1
+    mc_frenet_states_A1, ut_frenet_states_A1, ln_frenet_states_A1 = generate_transformations(
+        False, corridor_wrapper, cartesian_states)
 
-    # Monte Carlo transformation
-    mc_frenet_state_1 = monte_carlo_transformation(
-        moving_frenet_frame_assumption, corridor_wrapper, cartesian_state_1)
-    mc_frenet_state_2 = monte_carlo_transformation(
-        moving_frenet_frame_assumption, corridor_wrapper, cartesian_state_2)
-    mc_frenet_state_3 = monte_carlo_transformation(
-        moving_frenet_frame_assumption, corridor_wrapper, cartesian_state_3)
+    # transformations under assumption A-2
+    mc_frenet_states_A2, ut_frenet_states_A2, ln_frenet_states_A2 = generate_transformations(
+        True, corridor_wrapper, cartesian_states)
 
-    # Unscented transformation
-    ut_frenet_state_1 = unscented_transformation(moving_frenet_frame_assumption,
-                                                 corridor_wrapper, flat_cartesian_state_1)
-    ut_frenet_state_2 = unscented_transformation(moving_frenet_frame_assumption,
-                                                 corridor_wrapper, flat_cartesian_state_2)
-    ut_frenet_state_3 = unscented_transformation(moving_frenet_frame_assumption,
-                                                 corridor_wrapper, flat_cartesian_state_3)
+    # State transformation evaluation
+    a1_ln = []
+    a1_ut = []
+    a2_ln = []
+    a2_ut = []
+    for i in range(len(mc_frenet_states_A1)):
+        # euclidean distance
+        a1_ln.append(np.linalg.norm(ln_frenet_states_A1[i]['mean'] -
+                                    mc_frenet_states_A1[i]['mean']))
+        a1_ut.append(np.linalg.norm(ut_frenet_states_A1[i]['mean'] -
+                                    mc_frenet_states_A1[i]['mean']))
 
-    # Linearized transformation
-    ln_frenet_state_1 = linearized_tranformation(moving_frenet_frame_assumption,
-                                                 corridor_wrapper, flat_cartesian_state_1)
-    ln_frenet_state_2 = linearized_tranformation(moving_frenet_frame_assumption,
-                                                 corridor_wrapper, flat_cartesian_state_2)
-    ln_frenet_state_3 = linearized_tranformation(moving_frenet_frame_assumption,
-                                                 corridor_wrapper, flat_cartesian_state_3)
+        a2_ln.append(np.linalg.norm(ln_frenet_states_A2[i]['mean'] -
+                                    mc_frenet_states_A2[i]['mean']))
+        a2_ut.append(np.linalg.norm(ut_frenet_states_A2[i]['mean'] -
+                                    mc_frenet_states_A2[i]['mean']))
+        # z-test value
+        a1_ln.append(z_test(mc_frenet_states_A1[i], ln_frenet_states_A1[i]))
+        a1_ut.append(z_test(mc_frenet_states_A1[i], ut_frenet_states_A1[i]))
+
+        a2_ln.append(z_test(mc_frenet_states_A2[i], ln_frenet_states_A2[i]))
+        a2_ut.append(z_test(mc_frenet_states_A2[i], ut_frenet_states_A2[i]))
+
+    table_data = [a1_ln, a1_ut, a2_ln, a2_ut]
+    print(table_data)
 
     # PLOTTING #################################################################
     subplot_width = [0.5, 0.5]
     subplot_height = [1]
     # plt.rc('axes', prop_cycle=(cycler('color', ['m', 'g', 'b', 'c'])))
     fig = plt.figure()
-    gs = gridspec.GridSpec(2, 1)
+    gs = gridspec.GridSpec(2, 2, figure=fig)
     # , width_ratios=subplot_width,
     #  height_ratios=subplot_height)
 
-    ax_cart = fig.add_subplot(gs[0, 0], aspect='equal')
-    ax_frenet = fig.add_subplot(gs[1, 0], aspect='equal')
+    ax_cart = fig.add_subplot(gs[:1, :1], aspect='equal')
+    ax_frenet_A1 = fig.add_subplot(gs[:1, -1], aspect='equal')
+    ax_frenet_A2 = fig.add_subplot(gs[1:2, :1], aspect='equal')
+    ax_table = fig.add_subplot(gs[1:2, -1])
+    ax_table.axis('off')
 
     ax_cart.set_title('Cartesian coordinates')
-    ax_frenet.set_title('Frenet coordinates')
-    # axis labels
+    ax_frenet_A1.set_title('Frenet coordinates,\nstatic Frenet frame (A-1)')
+    ax_frenet_A2.set_title('Frenet coordinates,\nmoving Frenet frame (A-2)')
+    # cartesian axis labels
     ax_cart.set(xlabel='$x$ [m]')
     ax_cart.set(ylabel='$y$ [m]')
-    ax_frenet.set(xlabel='$l$ [m]')
-    ax_frenet.set(ylabel='$d$ [m]')
-    ax_cart.plot(lemniscate_nodes.x, lemniscate_nodes.y, 'ok')
+
+    # frenet A1 axis labels
+    ax_frenet_A1.set(xlabel='$l$ [m]')
+    ax_frenet_A1.set(ylabel='$d$ [m]')
+
+    ax_cart.plot(lemniscate_nodes.x, lemniscate_nodes.y, 'k.')
 
     # Cartesian plot
 
     ax_cart.plot(polyline_dict["reference_line_x"],
-                 polyline_dict["reference_line_y"], 'k-.')
+                 polyline_dict["reference_line_y"], 'k-.', linewidth=1)
     ax_cart.plot(polyline_dict["left_boundary_x"],
-                 polyline_dict["left_boundary_y"], color='tab:gray')
+                 polyline_dict["left_boundary_y"], color='tab:gray', linewidth=1)
     ax_cart.plot(polyline_dict["right_boundary_x"],
-                 polyline_dict["right_boundary_y"], color='tab:gray')
+                 polyline_dict["right_boundary_y"], color='tab:gray', linewidth=1)
 
-    plot_cartesian_state(ax_cart, cartesian_state_1)
-    plot_cartesian_state(ax_cart, cartesian_state_2)
-    plot_cartesian_state(ax_cart, cartesian_state_3)
+    plot_cartesian_state(ax_cart, cartesian_states[0])
+    plot_cartesian_state(ax_cart, cartesian_states[1])
+    plot_cartesian_state(ax_cart, cartesian_states[2])
 
     # Frenet plot
-    ax_frenet.plot([20, 130], [0, 0], 'k-.')
-    ax_frenet.plot([20, 130], [2, 2], color='tab:gray')
-    ax_frenet.plot([20, 130], [-2, -2], color='tab:gray')
+    ax_frenet_A1.plot([20, 130], [0, 0], 'k-.', linewidth=1)
+    ax_frenet_A1.plot([20, 130], [2, 2], color='tab:gray', linewidth=1)
+    ax_frenet_A1.plot([20, 130], [-2, -2], color='tab:gray', linewidth=1)
 
-    plot_frenet_state(ax_frenet, mc_frenet_state_1)
-    plot_frenet_state(ax_frenet, mc_frenet_state_2)
-    plot_frenet_state(ax_frenet, mc_frenet_state_3)
+    ax_frenet_A2.plot([20, 130], [0, 0], 'k-.', linewidth=1)
+    ax_frenet_A2.plot([20, 130], [2, 2], color='tab:gray', linewidth=1)
+    ax_frenet_A2.plot([20, 130], [-2, -2], color='tab:gray', linewidth=1)
 
-    plot_frenet_state(ax_frenet, ut_frenet_state_1, linestyle='--')
-    plot_frenet_state(ax_frenet, ut_frenet_state_2, linestyle='--')
-    plot_frenet_state(ax_frenet, ut_frenet_state_3, linestyle='--')
+    # Fill A-1 plot
+    for state in mc_frenet_states_A1:
+        plot_frenet_state(ax_frenet_A1, state, alpha=0.5)
 
-    plot_frenet_state(ax_frenet, ln_frenet_state_1, linestyle='-.')
-    plot_frenet_state(ax_frenet, ln_frenet_state_2, linestyle='-.')
-    plot_frenet_state(ax_frenet, ln_frenet_state_3, linestyle='-.')
+    for state in ut_frenet_states_A1:
+        plot_frenet_state(ax_frenet_A1, state, linestyle='--', alpha=0.5)
 
-    # ax_cart.set_aspect('equal')
-    # ax_frenet.set_aspect('equal')
+    for state in ln_frenet_states_A1:
+        plot_frenet_state(ax_frenet_A1, state, linestyle='-.', alpha=0.5)
+
+    # Fill A-2 plot
+    for state in mc_frenet_states_A2:
+        plot_frenet_state(ax_frenet_A2, state, alpha=0.5)
+
+    for state in ut_frenet_states_A2:
+        plot_frenet_state(ax_frenet_A2, state, linestyle='--', alpha=0.5)
+
+    for state in ln_frenet_states_A2:
+        plot_frenet_state(ax_frenet_A2, state, linestyle='-.', alpha=0.5)
 
     ax_cart.set_xlim([-50, 60])
     ax_cart.set_ylim([-25, 25])
 
-    ax_frenet.set_xlim([20, 130])
-    ax_frenet.set_ylim([-25, 25])
+    ax_frenet_A1.set_xlim([20, 130])
+    ax_frenet_A1.set_ylim([-25, 25])
+    ax_frenet_A2.set_xlim([20, 130])
+    ax_frenet_A2.set_ylim([-25, 25])
+
+    # Fill table
+    column_labels = ['Euclidean distance', 'Z-test values']
+    row_labels = ['A-1 LT', 'A-1 UT',
+                  'A-2 LT', 'A-2 UT']
+    # table = ax_table.table(cellText=table_data, colLabels=column_labels,
+    #                        rowLabels=row_labels, loc="center")
+    # table.set_fontsize(14)
 
     # ax_cart.set_aspect('equal', adjustable='box')
-    # ax_frenet.set_aspect('equal', adjustable='box')
-
+    # ax_frenet_A1_ut.set_aspect('equal', adjustable='box')
+    fig.tight_layout()
     plt.savefig(
-        '/home/dsp/Pictures/Matplotlib_PGFs/StateTransformation.pgf')
+        '/home/dsp/Pictures/Matplotlib_PGFs/StateTransformation.pgf', bbox_inches='tight')
 
     plt.show()
 

@@ -42,8 +42,6 @@ bool CubicSpline::constructSplineData(const CartesianPoints2D& points,
   data_ = ClampedSplineDataMatrixFromPoints(points, first_tangent, last_tangent,
                                             epsilon_);
   return true;
-
-  return true;
 }
 
 CartesianPoint2D CubicSpline::GetPositionAt(const RealType arc_length) const {

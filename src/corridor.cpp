@@ -1,5 +1,6 @@
 #include "corridor/corridor.h"
 
+#include "corridor/cubic_spline/cubic_spline.h"
 #include "corridor/cubic_spline/cubic_spline_coefficients.h"
 
 namespace corridor {
@@ -23,6 +24,23 @@ Corridor::Corridor(const IdType id, const CartesianPoints2D& reference_line_pts,
     rightBound_.SetPoint(i, {arc_length, -distance_right_boundary});
   }
 }
+
+Corridor::Corridor(const IdType id, const CartesianPoints2D& reference_line_pts,
+                   const CartesianVector2D& first_tangent,
+                   const CartesianVector2D& last_tangent,
+                   const RealType distance_left_boundary,
+                   const RealType distance_right_boundary) {
+  referenceLine_ =
+      cs::CubicSpline(id, reference_line_pts, first_tangent, last_tangent);
+  const auto num_pts = referenceLine_.GetSize();
+  leftBound_ = FrenetPolyline(num_pts);
+  rightBound_ = FrenetPolyline(num_pts);
+  for (int i = 0; i < num_pts; i++) {
+    const auto arc_length = referenceLine_.GetArclengthAtIndex(i);
+    leftBound_.SetPoint(i, {arc_length, distance_left_boundary});
+    rightBound_.SetPoint(i, {arc_length, -distance_right_boundary});
+  }
+}  // namespace corridor
 
 Corridor::Corridor(const IdType id, const CartesianPoints2D& reference_line_pts,
                    const CartesianPoints2D& left_boundary_pts,

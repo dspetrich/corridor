@@ -27,6 +27,20 @@ struct CorridorWrapper {
         Corridor(id, points, distance_left_boundary, distance_right_boundary);
   }
 
+  CorridorWrapper(const int id, const py::list& node_x, const py::list& node_y,
+                  const py::list& py_first_tangent,
+                  const py::list& py_last_tangent) {
+    using namespace corridor;
+    const CartesianPoints2D points = toCartesianPoints(node_x, node_y);
+    const CartesianVector2D first_tangent =
+        to_cartesian_vector(py_first_tangent);
+    const CartesianVector2D last_tangent = to_cartesian_vector(py_last_tangent);
+    const RealType distance_left_boundary = 2.0;
+    const RealType distance_right_boundary = 2.0;
+    corridor_ = Corridor(id, points, first_tangent, last_tangent,
+                         distance_left_boundary, distance_right_boundary);
+  }
+
   py::dict GetCartesianPolylinesLines(const corridor::RealType delta_s) {
     using namespace corridor;
     // Construct Cartesian polylines form corridors reference line and
@@ -54,7 +68,6 @@ struct CorridorWrapper {
     polylines["left_boundary_y"] = py_left_boundary.second;
     polylines["right_boundary_x"] = py_right_boundary.first;
     polylines["right_boundary_y"] = py_right_boundary.second;
-
     return polylines;
   }
 
@@ -86,6 +99,14 @@ struct CorridorWrapper {
         frenet_frame.FromCartesianState(cartesian_state, moving_frenet_frame);
 
     return Convert(frenet_state);
+  }
+
+  corridor::RealType lengthReferenceLine() {
+    return corridor_.lengthReferenceLine();
+  }
+
+  corridor::RealType curvatureAt(const corridor::RealType l) {
+    return corridor_.curvatureAt(l);
   }
 };
 

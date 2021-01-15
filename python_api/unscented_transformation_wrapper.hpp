@@ -68,7 +68,8 @@ FlatFrenetStateAndCovMat2D UnscentedStateTransformation(
     const bool moving_frenet_frame) {
   using namespace corridor;
   namespace ut = unscented_transformation;
-  FrenetState2D frenet_state = ut::ToFrenetState(corridor_wrapper.corridor_,
-                                                 Convert(flat_cartesian_state));
+  FrenetState2D frenet_state =
+      ut::ToFrenetState(corridor_wrapper.corridor_,
+                        Convert(flat_cartesian_state), moving_frenet_frame);
   return Convert(frenet_state);
 }

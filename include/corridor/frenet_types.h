@@ -182,6 +182,10 @@ class FrenetFrame2D {
   using RotationMatrix = Eigen::Matrix<RealType, 2, 2, Eigen::DontAlign>;
   RotationMatrix rotMat_F2C_;  //< From Frenet to Cartesian
   RotationMatrix rotMat_C2F_;  //< From Cartesian to Frenet
+
+  using JacobianMatrix = Eigen::Matrix<RealType, 4, 4, Eigen::DontAlign>;
+  JacobianMatrix defineJacobianMatrix(
+      const CartesianState2D& cartesian_state) const;
 };
 using FrenetFrames2D = std::vector<FrenetFrame2D>;
 
@@ -238,10 +242,11 @@ class FrenetPolyline {
 
   /**
    * @brief This function returns the deviation 'd' coordinate of the (l,d)
-   * Frenet coordinates defining the Frenet polyline. Between two nodes linearly
-   * interpolated between two closest Frenet polyline points. If the 'l' value
-   * is negative or larger than the arc length, then the 'd'
-   * coordinate corresponding to the beginning or end of the curve is returned.
+   * Frenet coordinates defining the Frenet polyline. Between two nodes
+   * linearly interpolated between two closest Frenet polyline points. If the
+   * 'l' value is negative or larger than the arc length, then the 'd'
+   * coordinate corresponding to the beginning or end of the curve is
+   * returned.
    *
    * @param[in] l: l value to query
    * @return 'd' value of the (l,d) Frenet coordinates corresponding to the

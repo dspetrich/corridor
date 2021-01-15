@@ -39,6 +39,22 @@ class Corridor {
            const RealType distance_right_boundary);
 
   /**
+   * @brief Construct a new Corridor object
+   *
+   * @param id corridor id
+   * @param reference_line_pts polyline which represents the reference line
+   * @param first_tangent        tangent vector of the first reference line pt
+   * @param last_tangent         tangent vector of the last reference line point
+   * @param distance_left_boundary distance to left boundary (without sign)
+   * @param distance_right_boundary distance to left boundary (without sign)
+   */
+  Corridor(const IdType id, const CartesianPoints2D& reference_line_pts,
+           const CartesianVector2D& first_tangent,
+           const CartesianVector2D& last_tangent,
+           const RealType distance_left_boundary,
+           const RealType distance_right_boundary);
+
+  /**
    * @brief Construct a new Corridor object with natural (free) spline boundary
    * conditions.
    *
@@ -57,10 +73,10 @@ class Corridor {
    *
    * @param id:                  corridor id
    * @param reference_line_pts   polyline which represents the reference line
-   * @param left_boundary_pts    polyline of left boundary
-   * @param right_boundary_pts   polyline of right boundary
    * @param first_tangent        tangent vector of the first reference line pt
    * @param last_tangent         tangent vector of the last reference line point
+   * @param left_boundary_pts    polyline of left boundary
+   * @param right_boundary_pts   polyline of right boundary
    */
   Corridor(const IdType id, const CartesianPoints2D& reference_line_pts,
            const CartesianVector2D& first_tangent,
