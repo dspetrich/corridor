@@ -8,9 +8,7 @@ from cycler import cycler
 
 import corridor
 
-from splines.AbstractSpline import Points
-from splines.CubicSpline import CubicSpline
-
+from base_data import Points
 
 matplotlib.rcParams.update({
     "pgf.texsystem": "pdflatex",

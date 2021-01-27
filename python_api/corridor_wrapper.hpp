@@ -15,6 +15,7 @@ namespace py = boost::python;
 // /////////////////////////////////////////////////////////////////////////////
 
 struct CorridorWrapper {
+  // CPP object
   corridor::Corridor corridor_;
 
   CorridorWrapper(const int id, const py::list& node_x,
@@ -99,6 +100,16 @@ struct CorridorWrapper {
         frenet_frame.FromCartesianState(cartesian_state, moving_frenet_frame);
 
     return Convert(frenet_state);
+  }
+
+  py::dict GetFrenetFrame(const cr::RealType target_x,
+                          const cr::RealType target_y) {
+    using namespace corridor;
+    CartesianPoint2D target_point(target_x, target_y);
+
+    FrenetFrame2D frenet_frame = corridor_.FrenetFrame(target_point);
+
+    return to_py_dict(frenet_frame);
   }
 
   corridor::RealType lengthReferenceLine() {

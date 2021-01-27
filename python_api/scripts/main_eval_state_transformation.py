@@ -7,10 +7,7 @@ import matplotlib.transforms as transforms
 from cycler import cycler
 
 import corridor
-
-from splines.AbstractSpline import Points
-from splines.CubicSpline import CubicSpline
-
+from base_data import Points
 
 matplotlib.rcParams.update({
     "pgf.texsystem": "pdflatex",
@@ -404,8 +401,8 @@ def main():
     # ax_cart.set_aspect('equal', adjustable='box')
     # ax_frenet_A1_ut.set_aspect('equal', adjustable='box')
     fig.tight_layout()
-    plt.savefig(
-        '/home/dsp/Pictures/Matplotlib_PGFs/StateTransformation.pgf', bbox_inches='tight')
+    # plt.savefig(
+    #     '/home/dsp/Pictures/Matplotlib_PGFs/StateTransformation.pgf', bbox_inches='tight')
 
     plt.show()
 

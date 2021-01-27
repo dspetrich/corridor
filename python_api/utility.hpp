@@ -76,17 +76,21 @@ inline py::dict to_py_dict(const corridor::CartesianPoint2D& vector2d) {
   return py_dict;
 }
 
+inline py::dict to_py_dict(const corridor::FrenetFrame2D& frenet_frame) {
+  py::dict py_frenet_frame;
+  py_frenet_frame["segm_index"] = frenet_frame.frenet_base().segment_info.idx;
+  py_frenet_frame["segm_arc_length"] =
+      frenet_frame.frenet_base().segment_info.relative_arc_length;
+  py_frenet_frame["origin"] = to_py_dict(frenet_frame.origin());
+  py_frenet_frame["tangent"] = to_py_dict(frenet_frame.tangent());
+  py_frenet_frame["normal"] = to_py_dict(frenet_frame.normal());
+  return py_frenet_frame;
+}
+
 inline py::list to_py_list(const corridor::FrenetFrames2D& frenet_frames) {
   py::list py_frenet_frames;
   for (const auto& ff : frenet_frames) {
-    py::dict py_frenet_frame;
-    py_frenet_frame["segm_index"] = ff.frenet_base().segment_info.idx;
-    py_frenet_frame["segm_arc_length"] =
-        ff.frenet_base().segment_info.relative_arc_length;
-    py_frenet_frame["origin"] = to_py_dict(ff.origin());
-    py_frenet_frame["tangent"] = to_py_dict(ff.tangent());
-    py_frenet_frame["normal"] = to_py_dict(ff.normal());
-    py_frenet_frames.append(py_frenet_frame);
+    py_frenet_frames.append(to_py_dict(ff));
   }
   return py_frenet_frames;
 }

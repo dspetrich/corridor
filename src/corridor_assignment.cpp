@@ -175,14 +175,12 @@ RealType MovingConfidence(const UncertainValue& absolute_velocity,
   const RealType nonMoving_limit =
       std::max(absolute_velocity.standard_deviation * sigma_band, 0.1);
 
-  // Moving confidence is 1-non_moving_confidence
-  const RealType non_moving_confidence =
-      math::evaluateIntegralLineWidthGaussian(
-          0.0, 1.0, absolute_velocity.value,
-          absolute_velocity.standard_deviation, -100, nonMoving_limit);
+  // Moving confidence
+  const RealType moving_confidence = math::evaluateIntegralLineWidthGaussian(
+      0.0, 1.0, absolute_velocity.value, absolute_velocity.standard_deviation,
+      nonMoving_limit, 100);
 
-  // return 1.0 - non_moving_confidence;
-  return 1 - non_moving_confidence;
+  return moving_confidence;
 };
 
 // /////////////////////////////////////////////////////////////////////////////
@@ -191,13 +189,14 @@ RealType MovingConfidence(const UncertainValue& absolute_velocity,
 SemanticLabelSet RelativeDirectionConfidence(
     const UncertainValue& relative_heading_angle, const RealType sigma_band) {
   // Extract value and standard deviation for better readability
-  const RealType v = relative_heading_angle.value;
-  const RealType sigma_v = relative_heading_angle.standard_deviation;
+  const RealType phi = relative_heading_angle.value;
+  const RealType sigma_phi = relative_heading_angle.standard_deviation;
 
   // Deviation from straight forward/crossing angle which is still considered
   // forward/crossing
   // const static RealType delta_phi = M_PI / 64.0;  // ~ 2.8 degrees
-  const static RealType delta_phi = std::max(sigma_v * sigma_band, M_PI / 64.0);
+  const static RealType delta_phi =
+      std::max(sigma_phi * sigma_band, M_PI / 64.0);
 
   // Specific angles
   const static RealType a0 = -10.0;
@@ -258,70 +257,70 @@ SemanticLabelSet RelativeDirectionConfidence(
   // A) following downstream
   RealType following_downstream = 0.0;
   following_downstream +=
-      math::evaluateIntegralLineWidthGaussian(0.0, b1, v, sigma_v, a0, a1);
+      math::evaluateIntegralLineWidthGaussian(0.0, b1, phi, sigma_phi, a0, a1);
   following_downstream +=
-      math::evaluateIntegralLineWidthGaussian(-m, b2, v, sigma_v, a1, a2);
+      math::evaluateIntegralLineWidthGaussian(-m, b2, phi, sigma_phi, a1, a2);
   following_downstream +=
-      math::evaluateIntegralLineWidthGaussian(m, b12, v, sigma_v, a7, a8);
+      math::evaluateIntegralLineWidthGaussian(m, b12, phi, sigma_phi, a7, a8);
   following_downstream +=
-      math::evaluateIntegralLineWidthGaussian(0.0, b13, v, sigma_v, a8, a9);
+      math::evaluateIntegralLineWidthGaussian(0.0, b13, phi, sigma_phi, a8, a9);
   following_downstream +=
-      math::evaluateIntegralLineWidthGaussian(-m, b14, v, sigma_v, a9, a10);
+      math::evaluateIntegralLineWidthGaussian(-m, b14, phi, sigma_phi, a9, a10);
   following_downstream +=
-      math::evaluateIntegralLineWidthGaussian(m, b24, v, sigma_v, a15, a16);
-  following_downstream +=
-      math::evaluateIntegralLineWidthGaussian(0.0, b25, v, sigma_v, a16, a17);
+      math::evaluateIntegralLineWidthGaussian(m, b24, phi, sigma_phi, a15, a16);
+  following_downstream += math::evaluateIntegralLineWidthGaussian(
+      0.0, b25, phi, sigma_phi, a16, a17);
 
   semantic_labels.setLabel(SemanticLabel::kDownstream, following_downstream);
 
   // B) following upstream
   RealType following_upstream = 0.0;
   following_upstream +=
-      math::evaluateIntegralLineWidthGaussian(m, b6, v, sigma_v, a3, a4);
+      math::evaluateIntegralLineWidthGaussian(m, b6, phi, sigma_phi, a3, a4);
   following_upstream +=
-      math::evaluateIntegralLineWidthGaussian(0.0, b7, v, sigma_v, a4, a5);
+      math::evaluateIntegralLineWidthGaussian(0.0, b7, phi, sigma_phi, a4, a5);
   following_upstream +=
-      math::evaluateIntegralLineWidthGaussian(-m, b8, v, sigma_v, a5, a6);
+      math::evaluateIntegralLineWidthGaussian(-m, b8, phi, sigma_phi, a5, a6);
   following_upstream +=
-      math::evaluateIntegralLineWidthGaussian(m, b18, v, sigma_v, a11, a12);
-  following_upstream +=
-      math::evaluateIntegralLineWidthGaussian(0.0, b19, v, sigma_v, a12, a13);
-  following_upstream +=
-      math::evaluateIntegralLineWidthGaussian(-m, b20, v, sigma_v, a13, a14);
+      math::evaluateIntegralLineWidthGaussian(m, b18, phi, sigma_phi, a11, a12);
+  following_upstream += math::evaluateIntegralLineWidthGaussian(
+      0.0, b19, phi, sigma_phi, a12, a13);
+  following_upstream += math::evaluateIntegralLineWidthGaussian(
+      -m, b20, phi, sigma_phi, a13, a14);
 
   semantic_labels.setLabel(SemanticLabel::kUpstream, following_upstream);
 
   // C) crossing towards left
   RealType crossing_left = 0.0;
   crossing_left +=
-      math::evaluateIntegralLineWidthGaussian(m, b3, v, sigma_v, a1, a2);
+      math::evaluateIntegralLineWidthGaussian(m, b3, phi, sigma_phi, a1, a2);
   crossing_left +=
-      math::evaluateIntegralLineWidthGaussian(0.0, b4, v, sigma_v, a2, a3);
+      math::evaluateIntegralLineWidthGaussian(0.0, b4, phi, sigma_phi, a2, a3);
   crossing_left +=
-      math::evaluateIntegralLineWidthGaussian(-m, b5, v, sigma_v, a3, a4);
+      math::evaluateIntegralLineWidthGaussian(-m, b5, phi, sigma_phi, a3, a4);
   crossing_left +=
-      math::evaluateIntegralLineWidthGaussian(m, b15, v, sigma_v, a9, a10);
-  crossing_left +=
-      math::evaluateIntegralLineWidthGaussian(0.0, b16, v, sigma_v, a10, a11);
-  crossing_left +=
-      math::evaluateIntegralLineWidthGaussian(-m, b17, v, sigma_v, a11, a12);
+      math::evaluateIntegralLineWidthGaussian(m, b15, phi, sigma_phi, a9, a10);
+  crossing_left += math::evaluateIntegralLineWidthGaussian(0.0, b16, phi,
+                                                           sigma_phi, a10, a11);
+  crossing_left += math::evaluateIntegralLineWidthGaussian(-m, b17, phi,
+                                                           sigma_phi, a11, a12);
 
   semantic_labels.setLabel(SemanticLabel::kTowardsLeft, crossing_left);
 
   // D) crossing towards right
   RealType crossing_right = 0.0;
   crossing_right +=
-      math::evaluateIntegralLineWidthGaussian(m, b9, v, sigma_v, a5, a6);
+      math::evaluateIntegralLineWidthGaussian(m, b9, phi, sigma_phi, a5, a6);
   crossing_right +=
-      math::evaluateIntegralLineWidthGaussian(0.0, b10, v, sigma_v, a6, a7);
+      math::evaluateIntegralLineWidthGaussian(0.0, b10, phi, sigma_phi, a6, a7);
   crossing_right +=
-      math::evaluateIntegralLineWidthGaussian(-m, b11, v, sigma_v, a7, a8);
+      math::evaluateIntegralLineWidthGaussian(-m, b11, phi, sigma_phi, a7, a8);
   crossing_right +=
-      math::evaluateIntegralLineWidthGaussian(m, b21, v, sigma_v, a13, a14);
-  crossing_right +=
-      math::evaluateIntegralLineWidthGaussian(0.0, b22, v, sigma_v, a14, a15);
-  crossing_right +=
-      math::evaluateIntegralLineWidthGaussian(-m, b23, v, sigma_v, a15, a16);
+      math::evaluateIntegralLineWidthGaussian(m, b21, phi, sigma_phi, a13, a14);
+  crossing_right += math::evaluateIntegralLineWidthGaussian(
+      0.0, b22, phi, sigma_phi, a14, a15);
+  crossing_right += math::evaluateIntegralLineWidthGaussian(
+      -m, b23, phi, sigma_phi, a15, a16);
 
   semantic_labels.setLabel(SemanticLabel::kTowardsRight, crossing_right);
 

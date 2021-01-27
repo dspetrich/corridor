@@ -20,10 +20,13 @@ BOOST_PYTHON_MODULE(PYTHON_API_MODULE_NAME) {  // NOLINT
   // ///////////////////////////////////////////////////////////////////////////
   // Cubic Spline
   // ///////////////////////////////////////////////////////////////////////////
-  py::class_<CubicSpline>("CubicSpline")
-      .def("naturalSplineParameter", &CubicSpline::naturalSplineParameter)
-      .def("clampedSplineParameter", &CubicSpline::clampedSplineParameter)
-      .def("constructFrenetFrames", &CubicSpline::constructFrenetFrames);
+
+  py::class_<CubicSplineWrapper>(
+      "CubicSplineWrapper", py::init<int, const py::list&, const py::list&>())
+      .def(py::init<int, const py::list&, const py::list&, const py::list&,
+                    const py::list&>())
+      .def("total_length", &CubicSplineWrapper::GetTotalLength)
+      .def("get_polyline", &CubicSplineWrapper::getPolyline);
 
   // ///////////////////////////////////////////////////////////////////////////
   // Corridor Wrapper
@@ -35,6 +38,7 @@ BOOST_PYTHON_MODULE(PYTHON_API_MODULE_NAME) {  // NOLINT
       .def("get_polylines", &CorridorWrapper::GetCartesianPolylinesLines)
       .def("to_frenet_state_vector", &CorridorWrapper::ToFrenetStateVector)
       .def("to_frenet_state", &CorridorWrapper::ToFrenetState)
+      .def("get_frenet_frame_dict", &CorridorWrapper::GetFrenetFrame)
       .def("length_reference_line", &CorridorWrapper::lengthReferenceLine)
       .def("curvature_at", &CorridorWrapper::curvatureAt);
 

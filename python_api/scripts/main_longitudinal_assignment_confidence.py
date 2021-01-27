@@ -31,34 +31,36 @@ ax = fig.gca(projection='3d')
 
 # Define plain features of the object
 features = corridor.CorridorAssignmentFeature()
-features.corridor_width = 4
-features.d = 0
+features.corridor_length = 20
 features.l = 0  # <-- X
 features.sigma_l = 0.5  # <-- variable
-features.obj_width_ratio = 0.5  # <-- variable
+features.obj_length_ratio = 0.2  # <-- variable
 
-w_c = features.corridor_width
-x_max = 2*w_c
+# Details
+l_o = features.corridor_length * features.obj_length_ratio
+x_min = -2*l_o
+l_c = features.corridor_length
+x_max = l_c - x_min
 
 # problem parameters
-n_long = 1000
-n_width = 1000
+n_lengths = 1000
+n_sigma = 1000
 
-d = np.linspace(-x_max, x_max, n_long,)
-sigma_d = np.linspace(0.01, 10, n_width,)
+l_range = np.linspace(x_min, x_max, n_lengths,)
+sigma_range = np.linspace(0.01, 10, n_sigma,)
 
-xx = np.zeros((n_long, n_width), dtype='d')
-yy = np.zeros((n_long, n_width), dtype='d')
-zz = np.zeros((n_long, n_width), dtype='d')
+xx = np.zeros((n_lengths, n_sigma), dtype='d')
+yy = np.zeros((n_lengths, n_sigma), dtype='d')
+zz = np.zeros((n_lengths, n_sigma), dtype='d')
 
 # Details
 # populate x,y,z arrays
-for i in range(n_long):
-    for j in range(n_width):
-        xx[i, j] = d[i]
-        yy[i, j] = sigma_d[j]
-        features.d = d[i]
-        features.sigma_d = sigma_d[j]
+for i in range(n_lengths):
+    for j in range(n_sigma):
+        xx[i, j] = l_range[i]
+        yy[i, j] = sigma_range[j]
+        features.l = l_range[i]
+        features.sigma_l = sigma_range[j]
         zz[i, j] = corridor.LongitudinalAssignmentConfidence(features)
 
 surf = ax.plot_surface(xx, yy, zz, cmap=cm.coolwarm,

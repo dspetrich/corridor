@@ -89,7 +89,7 @@ for l in sigma:
     for x in x_range:
         features.l = x
         # for s in sigma:
-        long_conf.append(corridor.LongitudinalConfidence(features))
+        long_conf.append(corridor.LongitudinalAssignmentConfidence(features))
     ax2.plot(x_range, long_conf)
 
 
@@ -109,7 +109,7 @@ for l in l_c_ratio:
     for x in x_range:
         features.l = x
         # for s in sigma:
-        long_conf.append(corridor.LongitudinalConfidence(features))
+        long_conf.append(corridor.LongitudinalAssignmentConfidence(features))
     ax4.plot(x_range, long_conf)
     lx, ly = create_assignment_function(l_c, l_c*l, x_min, x_max)
     ax3.plot(lx, ly)

@@ -5,9 +5,9 @@ import matplotlib.gridspec as gridspec
 from cycler import cycler
 
 import corridor
-
-from splines.AbstractSpline import Points
-from splines.CubicSpline import CubicSpline
+from base_data import Points
+# from splines.AbstractSpline import Points
+# from splines.CubicSpline import CubicSpline
 
 matplotlib.rcParams.update({
     "pgf.texsystem": "pdflatex",
@@ -85,9 +85,6 @@ def main():
     clamped_spline_line_handles = []
     clamped_spline_labels = []
 
-    # Create CPP spline object
-    spline = CubicSpline('CppCubic', 'g-')
-
     # Range of node samples for curve approximation
     n_nodes = range(4, 40, 1)
     for k, item in enumerate(n_nodes):
@@ -99,24 +96,27 @@ def main():
             np.sin(t_nodes) / (np.sin(t_nodes)**2 + 1)
 
         # Natural cubic spline
-        natural_sp = spline.generatePointsFrom(nodes)
-        natural_arc_length_list.append(spline.total_arc_length())
+        natural_sp = corridor.CubicSplineWrapper(
+            1, nodes.x.tolist(), nodes.y.tolist())
+        natural_arc_length_list.append(natural_sp.total_length())
 
         # Clamped cubic spline
-        clamped_sp = spline.generatePointsFrom(
-            nodes, first_tangent, last_tangent)
-        clamped_arc_length_list.append(spline.total_arc_length())
+        clamped_sp = corridor.CubicSplineWrapper(
+            2, nodes.x.tolist(), nodes.y.tolist(), first_tangent, last_tangent)
+        clamped_arc_length_list.append(clamped_sp.total_length())
 
         if item in plotable_approximation:
             # Natural spline
             node_plot = ax2.plot(nodes.x, nodes.y, '.-.', linewidth=0.3)
-            natural_spline_line_handles += ax2.plot(natural_sp.x, natural_sp.y, '-',
+            polyline_dict = natural_sp.get_polyline(0.5)
+            natural_spline_line_handles += ax2.plot(polyline_dict['x'], polyline_dict['y'], '-',
                                                     color=node_plot[0].get_color(), linewidth=.7)
             natural_spline_labels.append('n = %i' % item)
             # Clamped spline
             ax3.plot(nodes.x, nodes.y, '.-.',
                      color=node_plot[0].get_color(), linewidth=0.3)
-            clamped_spline_line_handles += ax3.plot(clamped_sp.x, clamped_sp.y, '-',
+            polyline_dict = clamped_sp.get_polyline(0.5)
+            clamped_spline_line_handles += ax3.plot(polyline_dict['x'], polyline_dict['y'], '-',
                                                     color=node_plot[0].get_color(), linewidth=0.7)
             clamped_spline_labels.append('n = %i' % item)
 
@@ -130,13 +130,6 @@ def main():
     line_handles += ax4.plot(n_nodes, abs(clamped_arc_length_list), '.--')
     ax4.legend(line_handles, ['Natural spline',
                               'Clamped spline'], loc='upper right')
-    # print('arc length lemniscate: ' + str(length_lemniscate))
-
-    # for l in arc_length_list:
-    #     print(l)
-
-    # errors = arc_length_list - length_lemnsicate
-    # print(errors)
 
     # #####################################################################
     # Figure setup

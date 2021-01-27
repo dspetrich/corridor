@@ -77,8 +77,8 @@ class SemanticLabelSet {
   }
 
   /**
-   * @brief Set confidence of a specific label if present in the label map.
-   * Return false when the label is not present and doesn't change the map.
+   * @brief Set confidence value of a specific label if present in the label
+   * map. Return false when the label is not present and doesn't change the map.
    *
    * @param[in] label: label which will be altered
    * @param[in] confidence: new confidence value for the label

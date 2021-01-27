@@ -86,13 +86,13 @@ surf_sd = ax_sigma_d.plot_surface(xx_sd, yy_sd, zz_sd, cmap=cm.coolwarm,
 surf_w = ax_width.plot_surface(xx_w, yy_w, zz_w, cmap=cm.coolwarm,
                                linewidth=0, antialiased=False)
 
-ax_sigma_d.set_xlabel('Lateral displacement $d_{p,r}$ [$m$]')
-ax_sigma_d.set_ylabel('Standard Deviation $\sigma_{d}$ [$m$]')
-ax_sigma_d.set_zlabel('Assignment confidence')
+ax_sigma_d.set_xlabel('lateral position $d_{\eta}$ [m]')
+ax_sigma_d.set_ylabel('standard deviation $\sigma_{d}$ [m]')
+ax_sigma_d.set_zlabel('assignment confidence')
 
-ax_width.set_xlabel('Lateral displacement $d_{p,r}$ [$m$]')
-ax_width.set_ylabel('Relative object width $w_{obj}$')
-ax_width.set_zlabel('Assignment confidence')
+ax_width.set_xlabel('lateral position $d_{\eta}$ [m]')
+ax_width.set_ylabel('object width ratio $\hat{W}_{obj}/W_{corr}$')
+ax_width.set_zlabel('assignment confidence')
 
 # cset = ax.contour(xx_sd, yy_sd, zz_sd, zdir='x', cmap=cm.coolwarm)
 # cset = ax.contour(xx_sd, yy_sd, zz_sd, zdir='y', cmap=cm.coolwarm)
@@ -101,5 +101,5 @@ ax_width.set_zlabel('Assignment confidence')
 # plt.savefig(
 #     '/home/dsp/Pictures/Matplotlib_PGFs/CorridorAssignment.pdf', bbox_inches='tight')
 plt.savefig(
-    '/home/dsp/Pictures/Matplotlib_PGFs/CorridorAssignment.pdf')
+    '/home/dsp/Pictures/Matplotlib_PGFs/LateralAssignmentConfidence.pdf')
 plt.show()

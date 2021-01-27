@@ -57,9 +57,9 @@ surf = ax.plot_surface(xx, yy, zz, cmap=cm.coolwarm,
 cset = ax.contour(xx, yy, zz, zdir='x', offset=20, cmap=cm.coolwarm)
 cset = ax.contour(xx, yy, zz, zdir='y', offset=10, cmap=cm.coolwarm)
 
-ax.set_xlabel('Absolute velocity $\mathbf{v}_{\mathbf{x}}^C$ [m/s]')
-ax.set_ylabel(r'$\sigma_{\mathbf{v}_{\mathbf{x}}^C}$ [m/s]')
-ax.set_zlabel('Moving Confidence')
+ax.set_xlabel('absolute velocity [m/s]')
+ax.set_ylabel(r'$\sigma_{||\mathbf{v}||}$ [m/s]')
+ax.set_zlabel('is-moving confidence')
 
 plt.savefig(
     '/home/dsp/Pictures/Matplotlib_PGFs/MovingConfidence.pdf')
