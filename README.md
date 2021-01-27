@@ -21,9 +21,7 @@ The library is designed as an extension to the [lanelet2](https://github.com/fzi
 
 ## Documentation
 
-You can find more documentation in the documentation and in doxygen comments within the code. Here is an overview on the most important topics:
-
-- [Here](doc/cubic_spline.md) you'll find more information about the cubic spline creation, the underlying math and the coordinate transformation with error propagation.
+You can find more documentation in doc folder and in doxygen comments within the code. In this [document](doc/corridor_documentation.pdf) you'll find the technical details about the algorithms used in the documentation.
 
 ## Installation
 
