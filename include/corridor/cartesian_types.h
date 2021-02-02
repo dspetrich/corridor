@@ -6,6 +6,7 @@
 #include <iomanip>  // std::setprecision
 
 #include "corridor/basic_types.h"
+#include "corridor/internal/oriented_bounding_box.h"
 
 namespace corridor {
 
@@ -182,8 +183,14 @@ class CartesianState2D {
   CartesianStateVector2D mean_;
   CartesianStateCovarianceMatrix2D cov_mat_;
 
-  // optional polar interpretation of the velocity vector. Will only be
-  // constructed if and then cached.
+  /**
+   * @brief Get the Polar Velocity State Ptr object
+   *        Optional polar interpretation of the velocity vector. Provides
+   *        orientation and absolute velocity.
+   *        Will only be constructed if needed and then cached.
+   *
+   * @return const PolarStatePtr
+   */
   const PolarStatePtr getPolarVelocityStatePtr();
   PolarStatePtr polar_velocity_state_;
 };
@@ -210,10 +217,12 @@ inline std::ostream& operator<<(std::ostream& os,
 class CartesianObjectState2D {
  public:
   CartesianObjectState2D(void)
-      : id_(InvalidId), box_dimension_(), state_(), state_cov_mat_() {}
+      : id_(InvalidId), oriented_bounding_box_(), state_(), state_cov_mat_() {}
 
   CartesianPoint2D centerPosition() const { return state_.position(); }
-  const BoxDimension& dimension() const { return box_dimension_; }
+  const OrientedBoundingBox& orientedBoundingBox() const {
+    return oriented_bounding_box_;
+  }
 
   const CartesianStateVector2D& state() const { return state_; }
   const CartesianStateCovarianceMatrix2D& stateCovarianceMatrix() const {
@@ -223,7 +232,7 @@ class CartesianObjectState2D {
   UncertainValue occupancyRadius() const {
     using namespace std;
     // Radius of the box, with the uncertainty of the position
-    UncertainValue radius = box_dimension_.enclosingCircleRadius();
+    UncertainValue radius = oriented_bounding_box_.enclosingCircleRadius();
     const RealType position_variance = state_cov_mat_.position().trace();
     radius.standard_deviation += std::sqrt(position_variance);
     return radius;
@@ -250,7 +259,7 @@ class CartesianObjectState2D {
 
  private:
   IdType id_;
-  BoxDimension box_dimension_;
+  OrientedBoundingBox oriented_bounding_box_;
   CartesianStateVector2D state_;
   CartesianStateCovarianceMatrix2D state_cov_mat_;
 };

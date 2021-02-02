@@ -101,8 +101,7 @@ class Corridor {
       const CartesianPoint2D& position) const noexcept;
 
   // Introspection
-  friend std::ostream& operator<<(std::ostream& os,
-                                  const CorridorPtr& corridor);
+  friend std::ostream& operator<<(std::ostream& os, const Corridor& corridor);
 
   void fillCartesianPolylines(const RealType delta_l,
                               CartesianPoints2D* reference_line,
@@ -122,7 +121,7 @@ class Corridor {
 };
 
 // Introspection
-std::ostream& operator<<(std::ostream& os, const CorridorPtr& corridor);
+// std::ostream& operator<<(std::ostream& os, const Corridor& corridor);
 
 /**
  * @brief an ordered sequence of corridors

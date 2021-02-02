@@ -91,16 +91,12 @@ FrenetPositionWithFrame Corridor::getFrenetPositionWithFrame(
   return referenceLine_.getFrenetPositionWithFrame(position);
 }
 
-std::ostream& operator<<(std::ostream& os, const CorridorPtr& corridor) {
+std::ostream& operator<<(std::ostream& os, const Corridor& corridor) {
   using namespace std;
-  os << "Corridor " << corridor->id() << "\n";
-  os << corridor->referenceLine_ << "\n";
-  os << corridor->leftBound_ << "\n";
-  os << corridor->rightBound_ << "\n";
-  // os << "Attributes:";
-  // for (const auto& o : corridor.attributes()) {
-  //   os << " [" << o.first << ": " << o.second << "]";
-  // }
+  os << "Corridor " << corridor.id() << "\n";
+  os << corridor.referenceLine_ << "\n";
+  os << corridor.leftBound_ << "\n";
+  os << corridor.rightBound_ << "\n";
   return os;
 }
 

@@ -11,15 +11,22 @@ namespace corridor {
 
 CorridorRelatedFeatures ComputeCorridorRelatedObjectFeature(
     const CartesianState2D& cartesian_state,
-    const BoxDimension& bounding_box_dimension, const Corridor& corridor) {
+    const OrientedBoundingBox& oriented_bounding_box,
+    const Corridor& corridor) {
   CorridorRelatedFeatures features;
   features.frenet_frame = corridor.FrenetFrame(cartesian_state.position());
   features.frenet_state =
       features.frenet_frame.FromCartesianState(cartesian_state);
 
   // Direct access to the box dimensions (no transformation required)
-  const auto projection_pair = bounding_box_dimension.projection(
-      features.frenet_state.orientation().value);
+  const auto relative_orientation =
+      oriented_bounding_box.orientation().value -
+      features.frenet_frame.frenet_base().orientation;
+
+  OrientedBoundingBox frenet_obb(relative_orientation,
+                                 oriented_bounding_box.length().value,
+                                 oriented_bounding_box.width().value);
+  const auto projection_pair = frenet_obb.projection();
   features.longitudinal_box_projection = projection_pair.first;
   features.lateral_box_projection = projection_pair.second;
 

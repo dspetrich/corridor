@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "corridor/internal/oriented_bounding_box.h"
 #include "corridor/unscented_transformation/sigma_points.h"
 #include "corridor/unscented_transformation/unscented_transformation.h"
 
@@ -44,8 +45,8 @@ TEST_F(UnscentedTransformationTest, UT_boxTransformation) {
 
   Eigen::MatrixXd transformed_sigmas(initial_state_.mean.size(), sigmas.cols());
   for (int i = 0; i < sigmas.cols(); i++) {
-    BoxDimension box(sigmas(0, i), sigmas(1, i));
-    const auto projection = box.projection(sigmas(2, i));
+    OrientedBoundingBox obb(sigmas(2, i), sigmas(0, i), sigmas(1, i));
+    const auto projection = obb.projection();
     transformed_sigmas(0, i) = projection.first;
     transformed_sigmas(1, i) = projection.second;
     transformed_sigmas(2, i) = sigmas(2, i);

@@ -5,6 +5,7 @@
 #include "corridor/corridor.h"
 #include "corridor/corridor_assignment/corridor_related_semantics.h"
 #include "corridor/frenet_types.h"
+#include "corridor/internal/oriented_bounding_box.h"
 
 namespace corridor {
 
@@ -18,8 +19,6 @@ struct CorridorRelatedFeatures {
   // Object features
   FrenetFrame2D frenet_frame;
   FrenetState2D frenet_state;
-
-  BoxDimension box_dimension;
 
   // TODO: use uncertainty value once the long and lat projection uncertainty is
   // needed (UT)
@@ -39,7 +38,6 @@ struct CorridorRelatedFeatures {
   CorridorRelatedFeatures(void)
       : frenet_frame(),
         frenet_state(),
-        box_dimension(),
         corridor_width(-1),
         corridor_length(-1),
         corridor_center_offset(-1) {}
@@ -60,7 +58,7 @@ inline std::ostream& operator<<(std::ostream& os,
 
 CorridorRelatedFeatures ComputeCorridorRelatedObjectFeature(
     const CartesianState2D& cartesian_state,
-    const BoxDimension& bounding_box_dimension, const Corridor& corridor);
+    const OrientedBoundingBox& oriented_bounding_box, const Corridor& corridor);
 
 // /////////////////////////////////////////////////////////////////////////////
 // // Lateral and Longitudinal assignment confidences
