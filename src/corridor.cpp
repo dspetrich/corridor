@@ -87,8 +87,9 @@ FrenetFrame2D Corridor::FrenetFrame(
 }
 
 FrenetPositionWithFrame Corridor::getFrenetPositionWithFrame(
-    const CartesianPoint2D& position) const noexcept {
-  return referenceLine_.getFrenetPositionWithFrame(position);
+    const CartesianPoint2D& position,
+    const RealType arc_length_hint) const noexcept {
+  return referenceLine_.getFrenetPositionWithFrame(position, arc_length_hint);
 }
 
 std::ostream& operator<<(std::ostream& os, const Corridor& corridor) {

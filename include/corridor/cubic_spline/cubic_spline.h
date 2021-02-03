@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <cmath>
 #include <iomanip>  // std::setprecision
 #include <iostream>
 #include <vector>
@@ -71,10 +72,12 @@ class CubicSpline {
    * @param point: Point, which is projected perpendicular onto the spline
    * @return FrenetFrames2D
    */
-  FrenetFrames2D FrenetFrames(CartesianPoint2D point) const;
+  FrenetFrames2D FrenetFrames(const CartesianPoint2D& point) const;
 
   FrenetPositionWithFrame getFrenetPositionWithFrame(
-      CartesianPoint2D point) const;
+      const CartesianPoint2D& point,
+      const RealType arc_length_hint =
+          std::numeric_limits<RealType>::quiet_NaN()) const;
 
   FrenetPolyline toFrenetPolyline(const CartesianPoints2D& points) const;
 

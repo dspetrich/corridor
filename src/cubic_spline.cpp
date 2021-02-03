@@ -1,5 +1,6 @@
 #include "corridor/cubic_spline/cubic_spline.h"
 
+#include <cmath>
 #include <iostream>
 
 #include "corridor/cubic_spline/cubic_interpolation_2d.h"
@@ -80,22 +81,33 @@ RealType CubicSpline::GetCurvatureAt(const RealType arc_length) const {
   return InterpolateSignedCurvatureValue(data_segment, relative_arc_length);
 }
 
-FrenetFrames2D CubicSpline::FrenetFrames(CartesianPoint2D point) const {
+FrenetFrames2D CubicSpline::FrenetFrames(const CartesianPoint2D& point) const {
   return ConstructFrenetFrames(data_, point);
 }
 
 FrenetPositionWithFrame CubicSpline::getFrenetPositionWithFrame(
-    CartesianPoint2D point) const {
-  FrenetPositionsWithFrames positions =
+    const CartesianPoint2D& point, const RealType arc_length_hint) const {
+  FrenetPositionsWithFrames frenet_data =
       ConstructFrenetPositionsWithFrames(data_, point, id_);
 
-  // Get frenet point with smallest displacement from centerline
-  FrenetPositionsWithFrames::iterator p_iter = std::min_element(
-      positions.begin(), positions.end(),
-      [](const FrenetPositionWithFrame& a, const FrenetPositionWithFrame& b) {
-        return a.position.d_value() < b.position.d_value();
-      });
-
+  FrenetPositionsWithFrames::iterator p_iter;
+  if (std::isnan(arc_length_hint)) {
+    // Get frenet point with smallest displacement from centerline
+    p_iter = std::min_element(
+        frenet_data.begin(), frenet_data.end(),
+        [](const FrenetPositionWithFrame& a, const FrenetPositionWithFrame& b) {
+          return a.position.d_value() < b.position.d_value();
+        });
+  } else {
+    // return frenet data with the closes distance to arc-length hint
+    p_iter =
+        std::min_element(frenet_data.begin(), frenet_data.end(),
+                         [arc_length_hint](const FrenetPositionWithFrame& a,
+                                           const FrenetPositionWithFrame& b) {
+                           return std::abs(a.position.l() - arc_length_hint) <
+                                  std::abs(b.position.l() - arc_length_hint);
+                         });
+  }
   return (*p_iter);
 }
 

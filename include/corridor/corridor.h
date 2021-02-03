@@ -98,7 +98,9 @@ class Corridor {
   FrenetFrame2D FrenetFrame(const CartesianPoint2D& position) const noexcept;
 
   FrenetPositionWithFrame getFrenetPositionWithFrame(
-      const CartesianPoint2D& position) const noexcept;
+      const CartesianPoint2D& position,
+      const RealType arc_length_hint =
+          std::numeric_limits<RealType>::quiet_NaN()) const noexcept;
 
   // Introspection
   friend std::ostream& operator<<(std::ostream& os, const Corridor& corridor);
@@ -127,7 +129,7 @@ class Corridor {
  * @brief an ordered sequence of corridors
  *
  * A CorridorSequence is a collection of Corridors that behaves like
- * like one single Corridor.
+ * a single Corridor.
  */
 class CorridorSequence {
  public:
