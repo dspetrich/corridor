@@ -25,6 +25,12 @@ class Points():
         self.x[idx] = x
         self.y[idx] = y
 
+    @classmethod
+    def set(cls, x, y):
+        cls.x = np.array([x])
+        cls.y = np.array([y])
+        return cls
+
 
 def lemniscate(alpha, num_nodes):
     t_lemniscate = np.linspace(0, 2*np.pi, num=num_nodes)

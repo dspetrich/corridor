@@ -85,13 +85,13 @@ class Corridor {
            const CartesianPoints2D& right_boundary_pts);
 
   //! Get the unique id of underlying reference line
-  IdType id() const noexcept { return referenceLine_.GetId(); }
+  IdType id() const noexcept { return reference_line_.GetId(); }
 
   BoundaryDistances signedDistancesAt(const RealType arc_length) const noexcept;
   RealType widthAt(const RealType arc_length) const noexcept;
   RealType centerOffset(const RealType arc_length) const noexcept;
   RealType curvatureAt(const RealType arc_length) const noexcept {
-    return referenceLine_.GetCurvatureAt(arc_length);
+    return reference_line_.GetCurvatureAt(arc_length);
   }
   RealType lengthReferenceLine() const noexcept;
 
@@ -110,16 +110,20 @@ class Corridor {
                               CartesianPoints2D* left_boundary,
                               CartesianPoints2D* right_boundary) const noexcept;
 
+  void fillCartesianPolylines(CartesianPoints2D* reference_line,
+                              CartesianPoints2D* left_boundary,
+                              CartesianPoints2D* right_boundary) const noexcept;
+
  private:
   // Reference line for the frenet frame. Not necessarily a centerline, but
   // has to be located between the left and right boundary.
-  cubic_spline::CubicSpline referenceLine_;
+  cubic_spline::CubicSpline reference_line_;
 
   // Left and right side of the corridor are independent from the sampling of
   // the reference line and independent from each other to assure maximal
   // flexibility
-  FrenetPolyline leftBound_;
-  FrenetPolyline rightBound_;
+  FrenetPolyline left_bound_;
+  FrenetPolyline right_bound_;
 };
 
 // Introspection

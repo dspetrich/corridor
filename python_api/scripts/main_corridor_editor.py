@@ -10,11 +10,29 @@ handling to interact with and modify objects on the canvas.
 """
 
 import numpy as np
+import matplotlib
 from matplotlib.backend_bases import MouseButton
 import matplotlib.pyplot as plt
 
 import corridor
 from base_data import Points, lemniscate
+
+
+matplotlib.rcParams.update({
+    "pgf.texsystem": "pdflatex",
+    'font.family': 'serif',
+    'font.size': '10',
+    'text.usetex': True,
+    'pgf.rcfonts': False,
+    'figure.autolayout': True,
+    'figure.figsize': [10, 6],
+    'xtick.labelsize': 'small',
+    'ytick.labelsize': 'small',
+    'legend.fontsize': 'x-small',
+    'legend.title_fontsize': 'small',
+    'lines.linewidth': '0.5'
+    # 'axes.labelsize': 'small',
+})
 
 
 class FrenetFrame():
@@ -67,13 +85,14 @@ class CorridorInteractor:
     showverts = True
     epsilon = 5  # max pixel distance to count as a vertex hit
 
-    def __init__(self, figure_axes):
+    def __init__(self, fig, figure_axes):
+        self.fig = fig
         self.ax = figure_axes
         self.canvas = self.ax.figure.canvas
         self._ind = None  # the active vert
 
         # Set a lemniscate as initial corridor nodes
-        self.nodes = lemniscate(100, 30)
+        self.nodes = lemniscate(30, 17)
 
         self.corridor = corridor.CorridorWrapper(
             1, self.nodes.x.tolist(), self.nodes.y.tolist())
@@ -82,20 +101,26 @@ class CorridorInteractor:
         # Draw vertices and target point
         self.vertices, = self.ax.plot(self.nodes.x, self.nodes.y,
                                       marker='o',
-                                      markerfacecolor='r',
+                                      color='k',
+                                      markerfacecolor='k',
                                       linestyle='None',
-                                      animated=True)
-        self.target_point, = ax.plot(50, 0,
+                                      animated=True,
+                                      label='reference line nodes')
+        self.target_point, = ax.plot(15, 5,
                                      marker='o',
+                                     color='b',
                                      markerfacecolor='b',
                                      linestyle='None',
-                                     animated=True)
+                                     animated=True,
+                                     label='cartesian position')
 
         frenet_frame = self.constructFrenetFrame()
         self.frenet_frame_plot, = ax.plot(frenet_frame.points.x,
                                           frenet_frame.points.y,
                                           marker='.',
-                                          animated=True)
+                                          color='m',
+                                          animated=True,
+                                          label='projection \& tangent')
 
         self.canvas.mpl_connect('draw_event', self.on_draw)
 
@@ -175,6 +200,11 @@ class CorridorInteractor:
         if event.key == 'a':
             self.updateAspect()
         self.canvas.draw()
+        if event.key == 'p':
+            self.fig.savefig(
+                '/home/dsp/Pictures/Matplotlib_PGFs/CorridorExample.png',
+                bbox_inches='tight',
+                dpi=300)
 
     def on_mouse_move(self, event):
         """Callback for mouse movements."""
@@ -185,6 +215,7 @@ class CorridorInteractor:
 
         if self._ind == -1:
             self.target_point.set_data([event.xdata], [event.ydata])
+
         elif self.showverts:
             x, y = event.xdata, event.ydata
             # Update point list
@@ -227,15 +258,22 @@ class CorridorInteractor:
         polyline_dict = corridor.get_polylines(1)
         self.reference_line, = self.ax.plot(polyline_dict["reference_line_x"],
                                             polyline_dict["reference_line_y"],
-                                            'k-.', linewidth=1, animated=True)
+                                            'k-.',
+                                            linewidth=1,
+                                            animated=True,
+                                            label='reference-line')
         self.left_boundary, = self.ax.plot(polyline_dict["left_boundary_x"],
                                            polyline_dict["left_boundary_y"],
-                                           color='tab:gray', linewidth=1,
-                                           animated=True)
+                                           color='tab:red',
+                                           linewidth=1,
+                                           animated=True,
+                                           label='left-boundary polygon')
         self.right_boundary, = self.ax.plot(polyline_dict["right_boundary_x"],
                                             polyline_dict["right_boundary_y"],
-                                            color='tab:gray', linewidth=1,
-                                            animated=True)
+                                            color='tab:green',
+                                            linewidth=1,
+                                            animated=True,
+                                            label='right-boundary polygon')
 
     def constructFrenetFrame(self):
         target_point = self.target_point.get_xydata()
@@ -248,11 +286,18 @@ class CorridorInteractor:
 
 
 fig, ax = plt.subplots()
-interactor = CorridorInteractor(ax)
-ax.set_title('drag vertices to update path')
+interactor = CorridorInteractor(fig, ax)
+# ax.set_title('drag vertices to update path')
 ax.set_xlabel('meter')
 ax.set_ylabel('meter')
+ax.set_aspect('equal')
 plt.autoscale(False)
-plt.show()
+# plt.legend(loc='upper left')
+
+plt.legend(bbox_to_anchor=(
+    .5, 1.05), loc='lower center', borderaxespad=0.,  ncol=3)
+
 
 plt.show()
+# fig.savefig(
+#     '/home/dsp/Pictures/Matplotlib_PGFs/CorridorExample.pdf', bbox_inches='tight')

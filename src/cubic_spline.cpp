@@ -116,6 +116,13 @@ FrenetPolyline CubicSpline::toFrenetPolyline(
   return ConvertToFrenetPolyline(data_, points);
 }
 
+void CubicSpline::fillCartesianPolyline(CartesianPoints2D* polyline) const {
+  polyline->clear();
+  for (int idx = 0; idx < data_.cols(); idx++) {
+    polyline->emplace_back(data_(kPoint_x, idx), data_(kPoint_y, idx));
+  }
+}
+
 const DataMatrix<RealType>::Index CubicSpline::GetSegmentIndexAtArcLength(
     const RealType arc_length) const noexcept {
   DataMatrix<RealType>::Index index = 0;

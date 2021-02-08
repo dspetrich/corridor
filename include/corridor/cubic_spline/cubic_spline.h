@@ -81,6 +81,8 @@ class CubicSpline {
 
   FrenetPolyline toFrenetPolyline(const CartesianPoints2D& points) const;
 
+  void fillCartesianPolyline(CartesianPoints2D* polyline) const;
+
   // Introspection
   friend std::ostream& operator<<(std::ostream& os, const CubicSpline& cs);
 
