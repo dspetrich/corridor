@@ -18,21 +18,25 @@ The library is designed as an extension to the [lanelet2](https://github.com/fzi
 - Released under the [**BSD 3-Clause license**](LICENSE)
 
 ---
+## Feature details
 
-### Examples
+### Interactive python scripts
+The performance of the corridor library can be tested with some python scripts, located at the [python_api](python_api/) folder.
+The GIF below shows an [interactive script](python_api/scripts/main_corridor_editor.py) to stress the corridor definition and Frenet coordinate transformation. 
 
-#### **Robust and flexibile definition**
+![](doc/images/corridor_editor_example.gif)
+In this interactive script, all nodes can be dragged and moved around and either the blue Cartesian position or the shape of the corridor changes.
+If you click anywhere within the diagram, the blue position will jump to it.
 
 
-
-#### **Corridor Definition**
-Since a cubic reference line definition requirers less points to approximate the course of a lanelet or corridor, the convertion of a map information into a corridor provides following benefits:
-- less points to approximate the lane course
-- due to the fewer points the resulting lines are much smoother
-
+### Corridor definition from lanelet map
 The following images represent the difference between original data and constructed corridors.
 For each lane segment only the start and end point, as well as their tangents were used to construct the corridor's reference line (magenta).
+The tangents are derived by the normal vector of the imaginary line connecting both first and last point of the left and right lane boundary. This lines are the longitidinal boundaries of the lanelets/corridors, shown as black lines perpendicular to the reference lines.
 If the lane segment exceeded 10 meters length, an additional sample point in the middle of the lane segment was used.
+
+Besides the much fewer points which are needed to represent the lane course it provides also C2 continuity within a corridor/lanelet and C1 continuity between consecutive corridors/lanelets.
+
 The result of this very rudimentary smoothing approach are visualized below.
 All pictures are based on map data which is provided by the [INTERACTION dataset](https://interaction-dataset.com/).
 
@@ -43,15 +47,52 @@ Legend:
 
 
 | Original data                                                                              | Corridor representation                                                                   |
-| ------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------- |
-| <img src="doc/images/DE_roundabout_original.png" alt="drawing" width="300"/>               | <img src="doc/images/DE_roundabout_corridor.png" alt="drawing" width="300"/>              |
-| <img src="doc/images/DE_merging_original.png" alt="drawing" width="300"/>                  | <img src="doc/images/DE_merging_corridor.png" alt="drawing" width="300"/>                 |
-| <img src="doc/images/USA_roundabout_intersection_original.png" alt="drawing" width="300"/> | <img src="doc/images/USA_roundabout_intersection_corrior.png" alt="drawing" width="300"/> |
+| ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| <img src="doc/images/DE_roundabout_original.png" alt="drawing" width="400"/>               | <img src="doc/images/DE_roundabout_corridor.png" alt="drawing" width="400"/>              |
+| <img src="doc/images/DE_merging_original.png" alt="drawing" width="400"/>                  | <img src="doc/images/DE_merging_corridor.png" alt="drawing" width="400"/>                 |
+| <img src="doc/images/USA_roundabout_intersection_original.png" alt="drawing" width="400"/> | <img src="doc/images/USA_roundabout_intersection_corrior.png" alt="drawing" width="400"/> |
+
+### State transformation into Frenet coordinates
+The Corridor library provides transformation functions to convert a Cartesian state vector init the Frenet coordinates of a corridor.
+The originating and resulting states are represented by Gaussian distributions to reflect sensor noise and the error propagation due to the non-linear transformation function.
+
+Two conversion methods are implemented and discussed in the [technical documentation](doc/corridor_documentation.pdf):
+- Taylor Series expansion to linearize the transformation function 
+- Unscented transformation (generic implementation)
+  
+The performance of both transformations are evaluated based on two assumptions, A-1 and A-2. Please read the technical documentation for more details.
+
+<img src="doc/images/evaluation_state_transformations.png" alt="drawing" width="400"/>
+
+The picture above shows the evaluation of the approximation error of two different state transformations, determined at different corridor curvatures in the range of κ ∈
+[0, 0.2] 1/m. The upper left picture visualizes the corridor and state in the
+Cartesian frame. The red ellipse represents the position uncertainty of three
+standard deviations (99.7 %), the black arrow represents the velocity mean vec-
+tor and the blue ellipse the velocity uncertainty of three standard deviations.
+The gray area visualizes all reference lines of the generated corridors. The upper
+right picture displays the transformed state in the Frenet frame of the corridor.
+Similar to the Cartesian coordinates, the red and blue ellipses represent the
+uncertainty of the position and velocity. The uncertainty ellipses of the ground
+truth is shown as solid lines, the linearized transformation as dashed-dot line.
+The unscented transformation is represented by a dashed line. The evaluation
+of both state transformations compared to the ground truth is shown in the
+lower two diagrams. A state transformation approximation is rejected when the
+z-test value is above 0.71 (dashed line in the lower right diagram).
+
+### Corridor assignment
+Build in algorithms which use the probabilistic Frenet coordinates, represented as Gaussian distribution, to assign detected objects to corridors.
+
+Implemented features:
+- **Lateral** and **longitudinal** overlap of the object with the corridor. This is based on the Gaussian distribution of the position estimated and the projection of the estimated object's bounding box. (Details in the )
+- **Moving confidence** and **bounding box orientation**.
+
+Details can be found in the [technical documentation](doc/corridor_documentation.pdf). 
 
 
 ## Documentation
 
-You can find more documentation in doc folder and in doxygen comments within the code. In this [document](doc/corridor_documentation.pdf) you'll find the technical details about the algorithms used in this library.
+You can find a detailed technical description about the Corridor library in this [document](doc/corridor_documentation.pdf).
+Don't hesitate to contact me if you have questions about the algorithms and implementation.
 
 ---
 ## Installation
@@ -99,6 +140,6 @@ The python bindings are implemented and tested with python 3. In general it shou
 
 ## Citation
 
-If you are using Corridor for scientific research or work, it would be nice if the usage of this library is mentioned. A scientific publication of this work and its usage is currently in the making and will be mentioned here shortly.
+If you are using Corridor for scientific research or work, I would be pleased if this  library is mentioned. A scientific publication of this work and its usage is currently in the making and will be mentioned here shortly.
 
 

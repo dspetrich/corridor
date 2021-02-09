@@ -3,10 +3,9 @@
 Corridor Editor
 ===========
 
-Sharing events across GUIs.
+Derived from the path_editor.py example, available at matplotlib.org:
+https://matplotlib.org/gallery/event_handling/path_editor.html#sphx-glr-gallery-event-handling-path-editor-py
 
-This example demonstrates a cross-GUI application using Matplotlib event
-handling to interact with and modify objects on the canvas.
 """
 
 import numpy as np
@@ -83,7 +82,7 @@ class CorridorInteractor:
     """
 
     showverts = True
-    epsilon = 5  # max pixel distance to count as a vertex hit
+    epsilon = 10  # max pixel distance to count as a vertex hit
 
     def __init__(self, fig, figure_axes):
         self.fig = fig
