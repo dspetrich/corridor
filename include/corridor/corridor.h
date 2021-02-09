@@ -105,14 +105,10 @@ class Corridor {
   // Introspection
   friend std::ostream& operator<<(std::ostream& os, const Corridor& corridor);
 
-  void fillCartesianPolylines(const RealType delta_l,
-                              CartesianPoints2D* reference_line,
-                              CartesianPoints2D* left_boundary,
-                              CartesianPoints2D* right_boundary) const noexcept;
-
-  void fillCartesianPolylines(CartesianPoints2D* reference_line,
-                              CartesianPoints2D* left_boundary,
-                              CartesianPoints2D* right_boundary) const noexcept;
+  void fillCartesianPolylines(
+      CartesianPoints2D* reference_line, CartesianPoints2D* left_boundary,
+      CartesianPoints2D* right_boundary, const RealType delta_l = 0.1,
+      const bool sample_boundaries = true) const noexcept;
 
  private:
   // Reference line for the frenet frame. Not necessarily a centerline, but

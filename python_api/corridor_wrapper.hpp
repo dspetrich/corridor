@@ -50,8 +50,8 @@ struct CorridorWrapper {
     CartesianPoints2D left_boundary;
     CartesianPoints2D right_boundary;
 
-    corridor_.fillCartesianPolylines(delta_s, &reference_line, &left_boundary,
-                                     &right_boundary);
+    corridor_.fillCartesianPolylines(&reference_line, &left_boundary,
+                                     &right_boundary, delta_s);
 
     // convert to python data structures
     const std::pair<py::list, py::list> py_refline =

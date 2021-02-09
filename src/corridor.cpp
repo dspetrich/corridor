@@ -8,6 +8,64 @@ namespace corridor {
 namespace cs = corridor::cubic_spline;
 
 // /////////////////////////////////////////////////////////////////////////////
+// Utility
+// /////////////////////////////////////////////////////////////////////////////
+
+void SampleAllPolylines(const cubic_spline::CubicSpline& reference_line,
+                        const FrenetPolyline& left_bound,
+                        const FrenetPolyline& right_bound,
+                        const RealType delta_l,
+                        CartesianPoints2D* reference_polyline,
+                        CartesianPoints2D* left_polyline,
+                        CartesianPoints2D* right_polyline) {
+  reference_polyline->clear();
+  left_polyline->clear();
+  right_polyline->clear();
+
+  RealType query_l = 0.0;
+  RealType max_length = reference_line.GetTotalLength();
+  while (query_l <= max_length) {
+    const CartesianPoint2D position = reference_line.GetPositionAt(query_l);
+    const CartesianVector2D normal = reference_line.GetNormalVectorAt(query_l);
+    const RealType d_left = left_bound.deviationAt(query_l);
+    const RealType d_right = right_bound.deviationAt(query_l);
+
+    reference_polyline->emplace_back(position);
+    left_polyline->emplace_back(position + d_left * normal);
+    right_polyline->emplace_back(position + d_right * normal);
+
+    query_l += delta_l;
+  }
+
+  if (query_l > max_length) {
+    // Add last point
+    const CartesianPoint2D position = reference_line.GetPositionAt(max_length);
+    const CartesianVector2D normal =
+        reference_line.GetNormalVectorAt(max_length);
+    const RealType d_left = left_bound.deviationAt(max_length);
+    const RealType d_right = right_bound.deviationAt(max_length);
+
+    reference_polyline->emplace_back(position);
+    left_polyline->emplace_back(position + d_left * normal);
+    right_polyline->emplace_back(position + d_right * normal);
+  }
+}
+
+void FillBoundaryPolyline(const cubic_spline::CubicSpline& reference_line,
+                          const FrenetPolyline& boundary,
+                          CartesianPoints2D* boundary_polyline) {
+  boundary_polyline->clear();
+  for (int i = 0, size = boundary.size(); i < size; i++) {
+    const FrenetPoint2D frenet_point = boundary[i];
+    const CartesianPoint2D position =
+        reference_line.GetPositionAt(frenet_point.l());
+    const CartesianVector2D normal =
+        reference_line.GetNormalVectorAt(frenet_point.l());
+    boundary_polyline->emplace_back(position + frenet_point.d() * normal);
+  }
+}
+
+// /////////////////////////////////////////////////////////////////////////////
 // Corridor
 // /////////////////////////////////////////////////////////////////////////////
 
@@ -102,65 +160,19 @@ std::ostream& operator<<(std::ostream& os, const Corridor& corridor) {
 }
 
 void Corridor::fillCartesianPolylines(
-    const RealType delta_l, CartesianPoints2D* reference_line,
-    CartesianPoints2D* left_boundary,
-    CartesianPoints2D* right_boundary) const noexcept {
-  reference_line->clear();
-  left_boundary->clear();
-  right_boundary->clear();
-  RealType query_l = 0.0;
-  RealType max_length = reference_line_.GetTotalLength();
-  while (query_l <= max_length) {
-    const CartesianPoint2D position = reference_line_.GetPositionAt(query_l);
-    const CartesianVector2D normal = reference_line_.GetNormalVectorAt(query_l);
-    const RealType d_left = left_bound_.deviationAt(query_l);
-    const RealType d_right = right_bound_.deviationAt(query_l);
-
-    reference_line->emplace_back(position);
-    left_boundary->emplace_back(position + d_left * normal);
-    right_boundary->emplace_back(position + d_right * normal);
-
-    query_l += delta_l;
+    CartesianPoints2D* reference_polyline, CartesianPoints2D* left_polyline,
+    CartesianPoints2D* right_polyline, const RealType delta_l,
+    const bool sample_boundaries) const noexcept {
+  if (sample_boundaries && 0.0 < delta_l) {
+    SampleAllPolylines(reference_line_, left_bound_, right_bound_, delta_l,
+                       reference_polyline, left_polyline, right_polyline);
+    return;
   }
 
-  if (query_l > max_length) {
-    // Add last point
-    const CartesianPoint2D position = reference_line_.GetPositionAt(max_length);
-    const CartesianVector2D normal =
-        reference_line_.GetNormalVectorAt(max_length);
-    const RealType d_left = left_bound_.deviationAt(max_length);
-    const RealType d_right = right_bound_.deviationAt(max_length);
-
-    reference_line->emplace_back(position);
-    left_boundary->emplace_back(position + d_left * normal);
-    right_boundary->emplace_back(position + d_right * normal);
-  }
-}
-
-void Corridor::fillCartesianPolylines(
-    CartesianPoints2D* reference_line, CartesianPoints2D* left_boundary,
-    CartesianPoints2D* right_boundary) const noexcept {
-  reference_line_.fillCartesianPolyline(reference_line);
-
-  left_boundary->clear();
-  for (int i = 0, size = left_bound_.size(); i < size; i++) {
-    const FrenetPoint2D frenet_point = left_bound_[i];
-    const CartesianPoint2D position =
-        reference_line_.GetPositionAt(frenet_point.l());
-    const CartesianVector2D normal =
-        reference_line_.GetNormalVectorAt(frenet_point.l());
-    left_boundary->emplace_back(position + frenet_point.d() * normal);
-  }
-
-  right_boundary->clear();
-  for (int i = 0, size = right_bound_.size(); i < size; i++) {
-    const FrenetPoint2D frenet_point = right_bound_[i];
-    const CartesianPoint2D position =
-        reference_line_.GetPositionAt(frenet_point.l());
-    const CartesianVector2D normal =
-        reference_line_.GetNormalVectorAt(frenet_point.l());
-    right_boundary->emplace_back(position + frenet_point.d() * normal);
-  }
+  // Sample reference line
+  reference_line_.fillCartesianPolyline(reference_polyline, delta_l);
+  FillBoundaryPolyline(reference_line_, left_bound_, left_polyline);
+  FillBoundaryPolyline(reference_line_, right_bound_, right_polyline);
 }
 
 // /////////////////////////////////////////////////////////////////////////////

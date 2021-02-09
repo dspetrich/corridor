@@ -6,7 +6,7 @@ Corridor is a C++ library for creating a curve-based description of a traffic la
 The library is designed as an extension to the [lanelet2](https://github.com/fzi-forschungszentrum-informatik/Lanelet2) map library but could potentially be used with any other map format.
 <!-- , as long the required inputs are provided for creating a corridor element. -->
 
-### Features:
+### Features
 - Creates a **corridor from three 2D polygons**, representing the left and right lane boundary, and the reference line in a Cartesian coordinate frame (e.g. UTM or similar).
 - Reference line is converted into a **2D cubic spline**, which serves as reference curve of the Frenet frame. Besides being located between the left and right boundary, no further requirements towards the reference polygon need to be meet (no centerline). However, it is recommended that the sampling rate of the polygon is higher in areas with high curvature to ensure good interpolation behavior. All three polygons can have their own sampling rate which can variate, e.g. no equidistant sampling required. 
 - Left and right boundary are directly converted into a Frenet polygon representation, consisting of arc length and deviation with respect to the reference line. This allows an efficient query of the corridor width and signed boundary distances at any query length.
@@ -17,12 +17,43 @@ The library is designed as an extension to the [lanelet2](https://github.com/fzi
 - **Python** bindings and evaluation scripts for the most important queries.
 - Released under the [**BSD 3-Clause license**](LICENSE)
 
-![](lanelet2_core/doc/images/lanelet2_example_image.png)
+---
+
+### Examples
+
+#### **Robust and flexibile definition**
+
+
+
+#### **Corridor Definition**
+Since a cubic reference line definition requirers less points to approximate the course of a lanelet or corridor, the convertion of a map information into a corridor provides following benefits:
+- less points to approximate the lane course
+- due to the fewer points the resulting lines are much smoother
+
+The following images represent the difference between original data and constructed corridors.
+For each lane segment only the start and end point, as well as their tangents were used to construct the corridor's reference line (magenta).
+If the lane segment exceeded 10 meters length, an additional sample point in the middle of the lane segment was used.
+The result of this very rudimentary smoothing approach are visualized below.
+All pictures are based on map data which is provided by the [INTERACTION dataset](https://interaction-dataset.com/).
+
+Legend:
+- reference line (magenta)
+- left corridor boundary (red)
+- right corridor boundary (green)
+
+
+| Original data                                                                              | Corridor representation                                                                   |
+| ------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------- |
+| <img src="doc/images/DE_roundabout_original.png" alt="drawing" width="300"/>               | <img src="doc/images/DE_roundabout_corridor.png" alt="drawing" width="300"/>              |
+| <img src="doc/images/DE_merging_original.png" alt="drawing" width="300"/>                  | <img src="doc/images/DE_merging_corridor.png" alt="drawing" width="300"/>                 |
+| <img src="doc/images/USA_roundabout_intersection_original.png" alt="drawing" width="300"/> | <img src="doc/images/USA_roundabout_intersection_corrior.png" alt="drawing" width="300"/> |
+
 
 ## Documentation
 
-You can find more documentation in doc folder and in doxygen comments within the code. In this [document](doc/corridor_documentation.pdf) you'll find the technical details about the algorithms used in the documentation.
+You can find more documentation in doc folder and in doxygen comments within the code. In this [document](doc/corridor_documentation.pdf) you'll find the technical details about the algorithms used in this library.
 
+---
 ## Installation
 
 Corridor relies mainly on [Catkin](https://catkin-tools.readthedocs.io/en/latest/index.html) for building and is targeted towards Linux.

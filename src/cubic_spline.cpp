@@ -116,10 +116,24 @@ FrenetPolyline CubicSpline::toFrenetPolyline(
   return ConvertToFrenetPolyline(data_, points);
 }
 
-void CubicSpline::fillCartesianPolyline(CartesianPoints2D* polyline) const {
+void CubicSpline::fillCartesianPolyline(CartesianPoints2D* polyline,
+                                        const RealType delta_l) const {
   polyline->clear();
-  for (int idx = 0; idx < data_.cols(); idx++) {
-    polyline->emplace_back(data_(kPoint_x, idx), data_(kPoint_y, idx));
+  if (delta_l <= 0.0) {
+    for (int idx = 0; idx < data_.cols(); idx++) {
+      polyline->emplace_back(data_(kPoint_x, idx), data_(kPoint_y, idx));
+    }
+  } else {
+    RealType query_l = 0.0;
+    const RealType max_length = GetTotalLength();
+    while (query_l <= max_length) {
+      polyline->emplace_back(GetPositionAt(query_l));
+      query_l += delta_l;
+    }
+    if (query_l > max_length) {
+      // Add last point
+      polyline->emplace_back(GetPositionAt(max_length));
+    }
   }
 }
 
