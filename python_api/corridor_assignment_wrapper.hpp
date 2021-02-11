@@ -88,14 +88,16 @@ py::dict RelativeDirectionConfidence(const corridor::RealType heading_mean,
                                      const corridor::RealType heading_std,
                                      const corridor::RealType sigma_band) {
   using namespace corridor;
-  const auto labels = corridor::RelativeDirectionConfidence(
-      {heading_mean, heading_std}, sigma_band);
 
   py::dict result;
-  result["downstream"] = labels.at(SemanticLabel::kDownstream);
-  result["upstream"] = labels.at(SemanticLabel::kUpstream);
-  result["towards_left"] = labels.at(SemanticLabel::kTowardsLeft);
-  result["towards_right"] = labels.at(SemanticLabel::kTowardsRight);
+  result["downstream"] = RelativeOrientationConfidence(
+      0.0, {heading_mean, heading_std}, sigma_band);
+  result["upstream"] = RelativeOrientationConfidence(
+      M_PI, {heading_mean, heading_std}, sigma_band);
+  result["towards_left"] = RelativeOrientationConfidence(
+      M_PI_2, {heading_mean, heading_std}, sigma_band);
+  result["towards_right"] = RelativeOrientationConfidence(
+      -M_PI_2, {heading_mean, heading_std}, sigma_band);
 
   return result;
 }

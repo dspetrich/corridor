@@ -73,7 +73,7 @@ struct UncertainValue {
 };
 // introspection
 inline std::ostream &operator<<(std::ostream &os, const UncertainValue &uv) {
-  os << "value = " << uv.value << "; variance = " << uv.variance() << "\n";
+  os << "value = " << uv.value << "; variance = " << uv.variance();
   return os;
 };
 

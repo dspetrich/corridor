@@ -30,9 +30,18 @@ struct CorridorRelatedFeatures {
   RealType corridor_length;         //< from start to end
   RealType corridor_center_offset;  //< offset reference line to center
 
-  bool longitudinalMatched() const {
+  bool longitudinallyMatched() const {
+    // TODO include uncertainty
     return (0.0 <= frenet_state.position().l()) &&
            (frenet_state.position().l() <= corridor_length);
+  }
+
+  UncertainValue longitudinalVelocity() const {
+    return {frenet_state.vl(), frenet_state.covarianceMatrix().vlvl()};
+  }
+
+  UncertainValue lateralVelocity() const {
+    return {frenet_state.vd(), frenet_state.covarianceMatrix().vdvd()};
   }
 
   CorridorRelatedFeatures(void)
@@ -85,6 +94,10 @@ RealType ComputeAssignmentConfidence(const CorridorRelatedFeatures& features);
  */
 RealType MovingConfidence(const UncertainValue& absolute_velocity,
                           const RealType sigma_band);
+
+RealType RelativeOrientationConfidence(
+    const RealType direction_angle,
+    const UncertainValue& relative_heading_angle, const RealType sigma_band);
 
 SemanticLabelSet RelativeDirectionConfidence(
     const UncertainValue& relative_heading_angle, const RealType sigma_band);
