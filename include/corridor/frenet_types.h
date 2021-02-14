@@ -439,19 +439,24 @@ struct FrenetStateCovarianceMatrix2D
 
 class FrenetState2D {
  public:
-  FrenetState2D(void) : mean_(), cov_mat_() {}
+  FrenetState2D(void) : corridor_id_(InvalidId), mean_(), cov_mat_() {}
   FrenetState2D(
-      const FrenetPoint2D& position, const FrenetVector2D& velocity,
+      const IdType corridor_id, const FrenetPoint2D& position,
+      const FrenetVector2D& velocity,
       const FrenetCovarianceMatrix2D& cm_position = FrenetCovarianceMatrix2D(),
       const FrenetCovarianceMatrix2D& cm_velocity = FrenetCovarianceMatrix2D(),
       const FrenetCovarianceMatrix2D& cm_pos_vel =
           FrenetCovarianceMatrix2D::Zero())
-      : mean_(position, velocity),
+      : corridor_id_(corridor_id),
+        mean_(position, velocity),
         cov_mat_(cm_position, cm_velocity, cm_pos_vel),
         polar_velocity_state_() {}
-  FrenetState2D(const FrenetStateVector2D& mean,
+  FrenetState2D(const IdType corridor_id, const FrenetStateVector2D& mean,
                 const FrenetStateCovarianceMatrix2D& cov_mat)
-      : mean_(mean), cov_mat_(cov_mat), polar_velocity_state_() {}
+      : corridor_id_(corridor_id),
+        mean_(mean),
+        cov_mat_(cov_mat),
+        polar_velocity_state_() {}
 
   // Simple getter
   RealType l() const { return mean_.l(); }
@@ -477,6 +482,7 @@ class FrenetState2D {
   friend std::ostream& operator<<(std::ostream& os, const FrenetState2D& state);
 
  private:
+  IdType corridor_id_;
   FrenetStateVector2D mean_;
   FrenetStateCovarianceMatrix2D cov_mat_;
 

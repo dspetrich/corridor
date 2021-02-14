@@ -19,11 +19,7 @@ struct CorridorRelatedFeatures {
   // Object features
   FrenetFrame2D frenet_frame;
   FrenetState2D frenet_state;
-
-  // TODO: use uncertainty value once the long and lat projection uncertainty is
-  // needed (UT)
-  RealType longitudinal_box_projection;
-  RealType lateral_box_projection;
+  OrientedBoundingBox frenet_obb;
 
   // Corridor features
   RealType corridor_width;          //< at projection point
@@ -47,6 +43,7 @@ struct CorridorRelatedFeatures {
   CorridorRelatedFeatures(void)
       : frenet_frame(),
         frenet_state(),
+        frenet_obb(),
         corridor_width(-1),
         corridor_length(-1),
         corridor_center_offset(-1) {}
@@ -57,8 +54,7 @@ inline std::ostream& operator<<(std::ostream& os,
   os << "Corridor Assignment Features\n";
   os << crf.frenet_frame;
   os << "Frenet State: " << crf.frenet_state.mean().transpose() << "\n";
-  os << "box projections (lat,long): " << crf.lateral_box_projection << ", "
-     << crf.longitudinal_box_projection << "\n";
+  os << "Frenet OBB: " << crf.frenet_obb << "\n";
   os << "corridor_width: " << crf.corridor_width << "\n";
   os << "corridor_length: " << crf.corridor_length << "\n";
   os << "corridor_center_offset: " << crf.corridor_center_offset << "\n";

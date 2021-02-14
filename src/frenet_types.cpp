@@ -59,7 +59,7 @@ FrenetState2D FrenetFrame2D::FromCartesianState(
   }
   // Linear transformation function
   return {
-      FromCartesianStateVector(cartesian_state.mean()),
+      this->frenet_base().id, FromCartesianStateVector(cartesian_state.mean()),
       FromCartesianStateCovarianceMatrix(cartesian_state.covarianceMatrix())};
 }
 
@@ -113,7 +113,7 @@ FrenetState2D FrenetFrame2D::FromCartesianStateTaylorExpansion(
       jacobian_matrix * cartesian_state.covarianceMatrix() *
       jacobian_matrix.transpose();
 
-  return {frenet_state_vector, frenet_cov_mat};
+  return {this->frenet_base().id, frenet_state_vector, frenet_cov_mat};
 }
 
 FrenetFrame2D::JacobianMatrix FrenetFrame2D::defineJacobianMatrix(

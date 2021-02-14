@@ -45,16 +45,15 @@ corridor::CorridorRelatedFeatures From(
       flat_features.sigma_vl * flat_features.sigma_vl,
       flat_features.sigma_vd * flat_features.sigma_vd);
 
-  features.frenet_state = FrenetState2D(state_vector, state_cov_mat);
+  features.frenet_state = FrenetState2D(InvalidId, state_vector, state_cov_mat);
 
   features.corridor_width = flat_features.corridor_width;
   features.corridor_length = flat_features.corridor_length;
   features.corridor_center_offset = 0.0;
 
-  features.longitudinal_box_projection =
-      (flat_features.corridor_length * flat_features.obj_length_ratio);
-  features.lateral_box_projection =
-      (flat_features.corridor_width * flat_features.obj_width_ratio);
+  features.frenet_obb = OrientedBoundingBox(
+      0.0, flat_features.corridor_length * flat_features.obj_length_ratio,
+      flat_features.corridor_width * flat_features.obj_width_ratio);
 
   return features;
 };

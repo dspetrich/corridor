@@ -19,16 +19,12 @@ CorridorRelatedFeatures ComputeCorridorRelatedObjectFeature(
       features.frenet_frame.FromCartesianState(cartesian_state);
 
   // Direct access to the box dimensions (no transformation required)
+  const UncertainValue orientation = oriented_bounding_box.orientation();
   const auto relative_orientation =
-      oriented_bounding_box.orientation().value -
-      features.frenet_frame.frenet_base().orientation;
-
-  OrientedBoundingBox frenet_obb(relative_orientation,
-                                 oriented_bounding_box.length().value,
-                                 oriented_bounding_box.width().value);
-  const auto projection_pair = frenet_obb.projection();
-  features.longitudinal_box_projection = projection_pair.first;
-  features.lateral_box_projection = projection_pair.second;
+      orientation.value - features.frenet_frame.frenet_base().orientation;
+  features.frenet_obb = OrientedBoundingBox(
+      {relative_orientation, orientation.standard_deviation},
+      oriented_bounding_box.length(), oriented_bounding_box.width());
 
   features.corridor_width =
       corridor.widthAt(features.frenet_frame.arc_length());
@@ -60,7 +56,7 @@ RealType LateralAssignmentConfidence(const CorridorRelatedFeatures& features) {
   const RealType sigma_d =
       std::sqrt(features.frenet_state.covarianceMatrix().dd());
 
-  const RealType object_width = features.lateral_box_projection;
+  const RealType object_width = features.frenet_obb.projectionX2();
 
   const RealType corridor_width = features.corridor_width;
   const RealType half_corridor_width = 0.5 * corridor_width;
@@ -75,16 +71,16 @@ RealType LateralAssignmentConfidence(const CorridorRelatedFeatures& features) {
   //		Case b): it's width is less than that of the corridor.
   if (object_width < std::numeric_limits<RealType>::epsilon()) {
     // Case 1) object projection is nearly 0: In this case, we should only
-    // evaluate the middle integral, and avoid paying the cost of computing the
-    // other two integrals:
+    // evaluate the middle integral, and avoid paying the cost of computing
+    // the other two integrals:
     r1 = 0.0;
     r2 = math::evaluateIntegralLineWidthGaussian(0.0, 1.0, distance_from_center,
                                                  sigma_d, -half_corridor_width,
                                                  half_corridor_width);
     r3 = 0.0;
   } else {
-    // Case 2) objects's projection is reasonably wide, in which case, we see if
-    // the object's, perhaps, too wide:
+    // Case 2) objects's projection is reasonably wide, in which case, we see
+    // if the object's, perhaps, too wide:
     const RealType m = 1.0 / object_width;
     const RealType b = 0.5 * (1.0 + corridor_width / object_width);
     if (object_width >= corridor_width) {
@@ -123,7 +119,7 @@ RealType LongitudinalAssignmentConfidence(
   const RealType l = features.frenet_state.l();
   const RealType sigma_l =
       std::sqrt(features.frenet_state.covarianceMatrix().ll());
-  const RealType object_length = features.longitudinal_box_projection;
+  const RealType object_length = features.frenet_obb.projectionX1();
   const RealType corridor_length = features.corridor_length;
 
   // For the sake of optimization, we distinguish between the two cases:
@@ -132,15 +128,15 @@ RealType LongitudinalAssignmentConfidence(
   RealType r1, r2, r3;
   if (object_length <= std::numeric_limits<RealType>::epsilon()) {
     // Case 1) object projection is nearly 0: In this case, we should only
-    // evaluate the middle integral, and avoid paying the cost of computing the
-    // other two integrals:
+    // evaluate the middle integral, and avoid paying the cost of computing
+    // the other two integrals:
     r1 = 0.0;
     r2 = math::evaluateIntegralLineWidthGaussian(0.0, 1.0, l, sigma_l, 0.0,
                                                  corridor_length);
     r3 = 0.0;
   } else {
-    // Case 2) objects's projection is reasonably long, in which case, we see if
-    // the object's, perhaps, too long:
+    // Case 2) objects's projection is reasonably long, in which case, we see
+    // if the object's, perhaps, too long:
     const RealType m1 = 1.0 / object_length;
     const RealType m2 = -m1;
     const RealType b1 = 0.5;
