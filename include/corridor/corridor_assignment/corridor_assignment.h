@@ -32,6 +32,8 @@ struct CorridorRelatedFeatures {
            (frenet_state.position().l() <= corridor_length);
   }
 
+  const FrenetState2D& frenetState() const { return frenet_state; }
+
   UncertainValue longitudinalVelocity() const {
     return {frenet_state.vl(), frenet_state.covarianceMatrix().vlvl()};
   }

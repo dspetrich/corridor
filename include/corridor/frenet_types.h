@@ -459,6 +459,7 @@ class FrenetState2D {
         polar_velocity_state_() {}
 
   // Simple getter
+  IdType corridorId() const { return corridor_id_; }
   RealType l() const { return mean_.l(); }
   RealType d() const { return mean_.d(); }
   RealType vl() const { return mean_.vl(); }
