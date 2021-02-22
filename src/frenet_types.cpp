@@ -199,6 +199,13 @@ RealType FrenetPolyline::deviationAt(const RealType query_l) const {
 // Frenet state (mean and covariance matrix)
 // /////////////////////////////////////////////////////////////////////////////
 
+UncertainValue FrenetState2D::lateral_position() const {
+  return UncertainValue(mean_.d(), cov_mat_.dd());
+}
+UncertainValue FrenetState2D::longitudinal_position() const {
+  return UncertainValue(mean_.l(), cov_mat_.ll());
+}
+
 UncertainValue FrenetState2D::abs_velocity() {
   const auto& polar_velocity_state = getPolarVelocityStatePtr();
   return polar_velocity_state->abs_value();

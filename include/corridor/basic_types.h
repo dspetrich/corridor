@@ -63,14 +63,33 @@ inline RealType constrainAngle(RealType angle) {
 
 // TODO: template!
 struct UncertainValue {
+  RealType variance() const { return standard_deviation * standard_deviation; }
+  RealType value;  // mean value
+  RealType standard_deviation;
+
   UncertainValue(const RealType _value = 0.0,
                  const RealType _standard_deviation = 1e-12)
       : value(_value), standard_deviation(_standard_deviation) {}
 
-  RealType variance() const { return standard_deviation * standard_deviation; }
-  RealType value;  // mean value
-  RealType standard_deviation;
+  UncertainValue operator+(const UncertainValue &other) const {
+    return UncertainValue(this->value + other.value,
+                          std::sqrt(this->variance() + other.variance()));
+  }
+  UncertainValue operator-(const UncertainValue &other) const {
+    return UncertainValue(this->value - other.value,
+                          std::sqrt(this->variance() + other.variance()));
+  }
+  UncertainValue operator*(const RealType factor) const {
+    return UncertainValue(this->value * factor,
+                          std::sqrt(this->variance()) * factor);
+  }
 };
+
+// // Commutative property of the multiplication operator
+// UncertainValue operator*(const RealType factor, const UncertainValue &uv) {
+//   return uv * factor;
+// }
+
 // introspection
 inline std::ostream &operator<<(std::ostream &os, const UncertainValue &uv) {
   os << "value = " << uv.value << "; variance = " << uv.variance();

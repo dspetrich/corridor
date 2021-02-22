@@ -467,6 +467,10 @@ class FrenetState2D {
 
   FrenetPoint2D position() const { return mean_.position(); }
   FrenetPoint2D velocity() const { return mean_.velocity(); }
+
+  // Values with uncertainty information
+  UncertainValue lateral_position() const;
+  UncertainValue longitudinal_position() const;
   UncertainValue abs_velocity();
   UncertainValue orientation();
 
