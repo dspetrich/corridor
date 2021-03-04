@@ -73,6 +73,14 @@ CorridorRelatedFeatures ComputeCorridorRelatedObjectFeature(
 
 RealType LateralAssignmentConfidence(const CorridorRelatedFeatures& features);
 
+// Assignment confidence that the object is left of the corridor
+RealType LeftLateralAssignmentConfidence(
+    const CorridorRelatedFeatures& features);
+
+// Confidence that the object is right of the corridor
+RealType RightLateralAssignmentConfidence(
+    const CorridorRelatedFeatures& features);
+
 RealType LongitudinalAssignmentConfidence(
     const CorridorRelatedFeatures& features);
 

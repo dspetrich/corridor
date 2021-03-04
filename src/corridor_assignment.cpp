@@ -113,6 +113,104 @@ RealType LateralAssignmentConfidence(const CorridorRelatedFeatures& features) {
   return r1 + r2 + r3;
 };
 
+// Assignment confidence that the object is left of the corridor
+RealType LeftLateralAssignmentConfidence(
+    const CorridorRelatedFeatures& features) {
+  // Lateral features
+  const RealType d = features.frenet_state.d();
+  const RealType sigma_d =
+      std::sqrt(features.frenet_state.covarianceMatrix().dd());
+
+  const RealType object_width = features.frenet_obb.projectionX2();
+
+  const RealType corridor_width = features.corridor_width;
+  const RealType half_corridor_width = 0.5 * corridor_width;
+  const RealType distance_from_center = d - features.corridor_center_offset;
+
+  RealType r1, r2;
+  // For the sake of optimization, we distinguish between the two cases:
+  // Case 1): object's projection is almost like that of a point
+  // Case 2): it's reasonably wide. In which case, we further distinguish
+  // between two cases:
+  // 		Case a): it's at least as wide as the corridor
+  //		Case b): it's width is less than that of the corridor.
+  if (object_width < std::numeric_limits<RealType>::epsilon()) {
+    // Case 1) object projection is nearly 0: In this case, we should only
+    // evaluate the middle integral, and avoid paying the cost of computing
+    // the other two integrals:
+
+    r1 = math::evaluateIntegralLineWidthGaussian(
+        0.0, 1.0, distance_from_center, sigma_d, -100, -half_corridor_width);
+    r2 = 0.0;
+  } else {
+    // Case 2) objects's projection is reasonably wide, in which case, we see
+    // if the object's, perhaps, too wide:
+    const RealType m = -1.0 / object_width;
+    const RealType b = (object_width - corridor_width) / (2.0 * object_width);
+
+    // Case 2.b): we need to evaluate all three parts of the integral
+    r1 = math::evaluateIntegralLineWidthGaussian(
+        0.0, 1.0, distance_from_center, sigma_d, -100,
+        -0.5 * (corridor_width + object_width));
+    r2 = math::evaluateIntegralLineWidthGaussian(
+        m, b, distance_from_center, sigma_d,
+        -0.5 * (corridor_width + object_width),
+        -0.5 * (corridor_width - object_width));
+  }
+  // std::cout << "r1, r2, r3 = " << r1 << ", " << r2 << ", " << r3 <<
+  // std::endl;
+  return r1 + r2;
+}
+
+// Assignment confidence that the object is right of the corridor
+RealType RightLateralAssignmentConfidence(
+    const CorridorRelatedFeatures& features) {
+  // Lateral features
+  const RealType d = features.frenet_state.d();
+  const RealType sigma_d =
+      std::sqrt(features.frenet_state.covarianceMatrix().dd());
+
+  const RealType object_width = features.frenet_obb.projectionX2();
+
+  const RealType corridor_width = features.corridor_width;
+  const RealType half_corridor_width = 0.5 * corridor_width;
+  const RealType distance_from_center = d - features.corridor_center_offset;
+
+  RealType r1, r2;
+  // For the sake of optimization, we distinguish between the two cases:
+  // Case 1): object's projection is almost like that of a point
+  // Case 2): it's reasonably wide. In which case, we further distinguish
+  // between two cases:
+  // 		Case a): it's at least as wide as the corridor
+  //		Case b): it's width is less than that of the corridor.
+  if (object_width < std::numeric_limits<RealType>::epsilon()) {
+    // Case 1) object projection is nearly 0: In this case, we should only
+    // evaluate the middle integral, and avoid paying the cost of computing
+    // the other two integrals:
+    r1 = 0.0;
+    r2 = math::evaluateIntegralLineWidthGaussian(
+        0.0, 1.0, distance_from_center, sigma_d, half_corridor_width, 100.0);
+
+  } else {
+    // Case 2) objects's projection is reasonably wide, in which case, we see
+    // if the object's, perhaps, too wide:
+    const RealType m = 1.0 / object_width;
+    const RealType b = (object_width - corridor_width) / (2.0 * object_width);
+
+    // Case 2.b): we need to evaluate all three parts of the integral
+    r1 = math::evaluateIntegralLineWidthGaussian(
+        m, b, distance_from_center, sigma_d,
+        0.5 * (corridor_width - object_width),
+        0.5 * (corridor_width + object_width));
+    r2 = math::evaluateIntegralLineWidthGaussian(
+        0.0, 1.0, distance_from_center, sigma_d,
+        0.5 * (corridor_width + object_width), 100.0);
+  }
+  // std::cout << "r1, r2, r3 = " << r1 << ", " << r2 << ", " << r3 <<
+  // std::endl;
+  return r1 + r2;
+}
+
 RealType LongitudinalAssignmentConfidence(
     const CorridorRelatedFeatures& features) {
   // Longitudinal features
