@@ -110,6 +110,11 @@ class Corridor {
       CartesianPoints2D* right_boundary, const RealType delta_l = 0.1,
       const bool sample_boundaries = true) const noexcept;
 
+  FrenetPolyline toFrenetPolyline(
+      const CartesianPoints2D& cartesian_polyline) const;
+
+  CartesianPoint2D toCartesianPoint(const FrenetPoint2D& frenet_point) const;
+
  private:
   // Reference line for the frenet frame. Not necessarily a centerline, but
   // has to be located between the left and right boundary.

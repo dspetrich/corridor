@@ -290,7 +290,7 @@ interactor = CorridorInteractor(fig, ax)
 ax.set_xlabel('meter')
 ax.set_ylabel('meter')
 ax.set_aspect('equal')
-plt.autoscale(False)
+plt.autoscale(True)
 # plt.legend(loc='upper left')
 
 plt.legend(bbox_to_anchor=(

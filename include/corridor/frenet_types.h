@@ -228,7 +228,7 @@ class FrenetPolyline {
   using DataRow = Eigen::Matrix<RealType, 1, Eigen::Dynamic>;
   using DataPoint = FrenetPoint2D;
 
-  // // Constr
+  // Constr
   FrenetPolyline(const int size = 0) { data_.resize(DataType::kSize, size); }
 
   /** Number of points in the polyline definition. */

@@ -98,7 +98,7 @@ Corridor::Corridor(const IdType id, const CartesianPoints2D& reference_line_pts,
     left_bound_.SetPoint(i, {arc_length, distance_left_boundary});
     right_bound_.SetPoint(i, {arc_length, -distance_right_boundary});
   }
-}  // namespace corridor
+}
 
 Corridor::Corridor(const IdType id, const CartesianPoints2D& reference_line_pts,
                    const CartesianPoints2D& left_boundary_pts,
@@ -173,6 +173,20 @@ void Corridor::fillCartesianPolylines(
   reference_line_.fillCartesianPolyline(reference_polyline, delta_l);
   FillBoundaryPolyline(reference_line_, left_bound_, left_polyline);
   FillBoundaryPolyline(reference_line_, right_bound_, right_polyline);
+}
+
+FrenetPolyline Corridor::toFrenetPolyline(
+    const CartesianPoints2D& cartesian_polyline) const {
+  return reference_line_.toFrenetPolyline(cartesian_polyline);
+}
+
+CartesianPoint2D Corridor::toCartesianPoint(
+    const FrenetPoint2D& frenet_point) const {
+  const CartesianPoint2D position =
+      reference_line_.GetPositionAt(frenet_point.l());
+  const CartesianVector2D normal =
+      reference_line_.GetNormalVectorAt(frenet_point.l());
+  return position + frenet_point.d() * normal;
 }
 
 // /////////////////////////////////////////////////////////////////////////////

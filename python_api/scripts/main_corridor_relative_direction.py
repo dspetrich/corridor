@@ -185,6 +185,6 @@ leg = Legend(ax, std_legend_line, std_legend_labels,
 ax.add_artist(leg)
 
 
-plt.savefig(
-    '/home/dsp/Pictures/Matplotlib_PGFs/SemanticLabelRelativeDirection.pgf', bbox_inches='tight')
+# plt.savefig(
+#     '/home/dsp/Pictures/Matplotlib_PGFs/SemanticLabelRelativeDirection.pgf', bbox_inches='tight')
 plt.show()
