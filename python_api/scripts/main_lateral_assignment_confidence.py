@@ -91,7 +91,8 @@ ax_sigma_d.set_ylabel('standard deviation $\sigma_{d}$ [m]')
 ax_sigma_d.set_zlabel('assignment confidence')
 
 ax_width.set_xlabel('lateral position $d_{\eta}$ [m]')
-ax_width.set_ylabel('object width ratio $\hat{W}_{obj}/W_{corr}$')
+ax_width.set_ylabel('object width ratio $\hat{w}_{obj}/w_{corr}$')
+ax_width.set_ylabel('object width ratio $\hat{w}_{obj}/w_{corr}$')
 ax_width.set_zlabel('assignment confidence')
 
 # cset = ax.contour(xx_sd, yy_sd, zz_sd, zdir='x', cmap=cm.coolwarm)
@@ -100,6 +101,6 @@ ax_width.set_zlabel('assignment confidence')
 # c = ax.pcolormesh(xx_sd, yy_sd, zz_sd, cmap='RdBu')
 # plt.savefig(
 #     '/home/dsp/Pictures/Matplotlib_PGFs/CorridorAssignment.pdf', bbox_inches='tight')
-plt.savefig(
-    '/home/dsp/Pictures/Matplotlib_PGFs/LateralAssignmentConfidence.pdf')
+# plt.savefig(
+#     '/home/dsp/Pictures/Matplotlib_PGFs/LateralAssignmentConfidence.pdf')
 plt.show()

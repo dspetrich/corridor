@@ -39,7 +39,8 @@ class Corridor {
            const RealType distance_right_boundary);
 
   /**
-   * @brief Construct a new Corridor object
+   * @brief Construct a new Corridor object with start and end tangent vector
+   * and constant distance to left and right boundary
    *
    * @param id corridor id
    * @param reference_line_pts polyline which represents the reference line
