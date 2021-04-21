@@ -1,6 +1,8 @@
 # Corridor
 
-Travis-CI status: [![Build Status](https://travis-ci.com/dspetrich/corridor.svg?branch=master)](https://travis-ci.com/dspetrich/corridor)
+[Travis-CI status](https://travis-ci.com/github/dspetrich/corridor)
+
+[![Build Status](https://travis-ci.com/dspetrich/corridor.svg?branch=master)](https://travis-ci.com/dspetrich/corridor)
 
 ## Overview
 
