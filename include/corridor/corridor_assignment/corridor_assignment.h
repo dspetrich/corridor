@@ -71,19 +71,73 @@ CorridorRelatedFeatures ComputeCorridorRelatedObjectFeature(
 // // Lateral and Longitudinal assignment confidences
 // /////////////////////////////////////////////////////////////////////////////
 
+/**
+ * @brief Confidence value that the object is within the lateral bounds of the
+ * corridor
+ *
+ * @param features: corridor related features
+ * @return RealType: confidence value [0,1]
+ */
 RealType LateralAssignmentConfidence(const CorridorRelatedFeatures& features);
 
-// Assignment confidence that the object is left of the corridor
-RealType LeftLateralAssignmentConfidence(
+/**
+ * @brief Confidence value that the object is besides of the left lateral
+ * corridor boundary.
+ *
+ * @param features: corridor related features
+ * @return RealType: confidence value [0,1]
+ */
+RealType LeftOfLateralAssignmentConfidence(
     const CorridorRelatedFeatures& features);
 
-// Confidence that the object is right of the corridor
-RealType RightLateralAssignmentConfidence(
+/**
+ * @brief Confidence value that the object is besides of the right lateral
+ * corridor boundary.
+ *
+ * @param features: corridor related features
+ * @return RealType: confidence value [0,1]
+ */
+RealType RightOfLateralAssignmentConfidence(
     const CorridorRelatedFeatures& features);
 
+/**
+ * @brief Confidence value that the object is within the longitudinal bounds of
+ * the corridor
+ *
+ * @param features: corridor related features
+ * @return RealType: confidence value [0,1]
+ */
 RealType LongitudinalAssignmentConfidence(
     const CorridorRelatedFeatures& features);
 
+/**
+ * @brief Confidence value that the object is downstream of the longitudinal
+ * bounds of the corridor
+ *
+ * @param features: corridor related features
+ * @return RealType: confidence value [0,1]
+ */
+RealType DownstreamLongitudinalAssignmentConfidence(
+    const CorridorRelatedFeatures& features);
+
+/**
+ * @brief Confidence value that the object is upstream of the longitudinal
+ * bounds of the corridor
+ *
+ * @param features: corridor related features
+ * @return RealType: confidence value [0,1]
+ */
+RealType UpstreamLongitudinalAssignmentConfidence(
+    const CorridorRelatedFeatures& features);
+
+/**
+ * @brief Product of lateral and longitudinal assignment confidences. Expresses
+ * the confidence that the object is within the lateral and longitudinal bounds
+ * of the corridor.
+ *
+ * @param features: corridor related features
+ * @return RealType: confidence value [0,1]
+ */
 RealType ComputeAssignmentConfidence(const CorridorRelatedFeatures& features);
 
 // /////////////////////////////////////////////////////////////////////////////
@@ -99,7 +153,8 @@ RealType ComputeAssignmentConfidence(const CorridorRelatedFeatures& features);
  * @return RealType: moving confidence between 0 and 1.
  */
 RealType MovingConfidence(const UncertainValue& absolute_velocity,
-                          const RealType sigma_band);
+                          const RealType sigma_band,
+                          const RealType moving_threshold = 0.1);
 
 RealType RelativeOrientationConfidence(
     const RealType direction_angle,

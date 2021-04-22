@@ -114,7 +114,7 @@ RealType LateralAssignmentConfidence(const CorridorRelatedFeatures& features) {
 };
 
 // Assignment confidence that the object is left of the corridor
-RealType LeftLateralAssignmentConfidence(
+RealType RightOfLateralAssignmentConfidence(
     const CorridorRelatedFeatures& features) {
   // Lateral features
   const RealType d = features.frenet_state.d();
@@ -143,8 +143,7 @@ RealType LeftLateralAssignmentConfidence(
         0.0, 1.0, distance_from_center, sigma_d, -100, -half_corridor_width);
     r2 = 0.0;
   } else {
-    // Case 2) objects's projection is reasonably wide, in which case, we see
-    // if the object's, perhaps, too wide:
+    // Case 2) objects's projection is reasonably wide
     const RealType m = -1.0 / object_width;
     const RealType b = (object_width - corridor_width) / (2.0 * object_width);
 
@@ -163,7 +162,7 @@ RealType LeftLateralAssignmentConfidence(
 }
 
 // Assignment confidence that the object is right of the corridor
-RealType RightLateralAssignmentConfidence(
+RealType LeftOfLateralAssignmentConfidence(
     const CorridorRelatedFeatures& features) {
   // Lateral features
   const RealType d = features.frenet_state.d();
@@ -265,16 +264,79 @@ RealType LongitudinalAssignmentConfidence(
   return r1 + r2 + r3;
 };
 
+RealType DownstreamLongitudinalAssignmentConfidence(
+    const CorridorRelatedFeatures& features) {
+  // Longitudinal features
+  const RealType l = features.frenet_state.l();
+  const RealType sigma_l =
+      std::sqrt(features.frenet_state.covarianceMatrix().ll());
+  const RealType object_length = features.frenet_obb.projectionX1();
+  const RealType corridor_length = features.corridor_length;
+
+  RealType r1 = 0.0, r2 = 0.0;
+  if (object_length <= std::numeric_limits<RealType>::epsilon()) {
+    // Case 1) object projection is nearly 0: In this case, we should only
+    // evaluate the middle integral, and avoid paying the cost of computing
+    // the other two integrals:
+    r2 = math::evaluateIntegralLineWidthGaussian(
+        0.0, 1.0, l, sigma_l, corridor_length, corridor_length + 100.0);
+  } else {
+    // Case 2) objects's projection is reasonably long
+    const RealType m = 1.0 / object_length;
+    const RealType b = 0.5 - corridor_length / object_length;
+    const RealType half_obj_length = 0.5 * object_length;
+
+    r1 = math::evaluateIntegralLineWidthGaussian(
+        m, b, l, sigma_l, corridor_length - half_obj_length,
+        corridor_length + half_obj_length);
+    r2 = math::evaluateIntegralLineWidthGaussian(
+        0, 1, l, sigma_l, corridor_length + half_obj_length,
+        corridor_length + half_obj_length + 100.);
+  }
+  return r1 + r2;
+}
+
+RealType UpstreamLongitudinalAssignmentConfidence(
+    const CorridorRelatedFeatures& features) {
+  // Longitudinal features
+  const RealType l = features.frenet_state.l();
+  const RealType sigma_l =
+      std::sqrt(features.frenet_state.covarianceMatrix().ll());
+  const RealType object_length = features.frenet_obb.projectionX1();
+  const RealType corridor_length = features.corridor_length;
+
+  RealType r1 = 0.0, r2 = 0.0;
+  if (object_length <= std::numeric_limits<RealType>::epsilon()) {
+    // Case 1) object projection is nearly 0: In this case, we should only
+    // evaluate the middle integral, and avoid paying the cost of computing
+    // the other two integrals:
+    r1 = math::evaluateIntegralLineWidthGaussian(0.0, 1.0, l, sigma_l, -100.0,
+                                                 0.0);
+  } else {
+    // Case 2) objects's projection is reasonably long
+    const RealType m = 1.0 / object_length;
+    const RealType b = 0.5;
+    const RealType half_obj_length = 0.5 * object_length;
+
+    r1 = math::evaluateIntegralLineWidthGaussian(0.0, 1.0, l, sigma_l, -100.0,
+                                                 -half_obj_length);
+    r2 = math::evaluateIntegralLineWidthGaussian(
+        m, b, l, sigma_l, -half_obj_length, half_obj_length);
+  }
+  return r1 + r2;
+}
+
 // /////////////////////////////////////////////////////////////////////////////
 // Moving Confidence
 // /////////////////////////////////////////////////////////////////////////////
 
 RealType MovingConfidence(const UncertainValue& absolute_velocity,
-                          const RealType sigma_band) {
+                          const RealType sigma_band,
+                          const RealType moving_threshold) {
   // Velocities below 0.1 mps are always considered as non-moving
   // TODO parameter!
-  const RealType nonMoving_limit =
-      std::max(absolute_velocity.standard_deviation * sigma_band, 0.1);
+  const RealType nonMoving_limit = std::max(
+      absolute_velocity.standard_deviation * sigma_band, moving_threshold);
 
   // Moving confidence
   const RealType moving_confidence = math::evaluateIntegralLineWidthGaussian(

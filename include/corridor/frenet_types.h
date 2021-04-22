@@ -290,8 +290,8 @@ struct FrenetStateVector2D
                       const FrenetVector2D& velocity) {
     (*this) << position.l(), position.d(), velocity.l(), velocity.d();
   }
-  FrenetStateVector2D(const RealType pos_l, const RealType pos_d,
-                      const RealType vel_l, const RealType vel_d) {
+  FrenetStateVector2D(const RealType pos_l, const RealType pos_d = 0.0,
+                      const RealType vel_l = 0.0, const RealType vel_d = 0.0) {
     (*this) << pos_l, pos_d, vel_l, vel_d;
   }
 
@@ -456,6 +456,11 @@ class FrenetState2D {
       : corridor_id_(corridor_id),
         mean_(mean),
         cov_mat_(cov_mat),
+        polar_velocity_state_() {}
+  FrenetState2D(const IdType corridor_id, const RealType& arc_length)
+      : corridor_id_(corridor_id),
+        mean_(FrenetStateVector2D(arc_length)),
+        cov_mat_(FrenetStateCovarianceMatrix2D(1e-12, 1e-12, 1e-12, 1e-12)),
         polar_velocity_state_() {}
 
   // Simple getter
