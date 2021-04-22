@@ -1,5 +1,9 @@
 # Corridor
 
+[Travis-CI status](https://travis-ci.com/github/dspetrich/corridor)
+
+[![Build Status](https://travis-ci.com/dspetrich/corridor.svg?branch=master)](https://travis-ci.com/dspetrich/corridor)
+
 ## Overview
 
 Corridor is a C++ library for creating a curve-based description of a traffic lane segment, utilizing the [Frenet–Serret formulas](https://en.wikipedia.org/wiki/Frenet%E2%80%93Serret_formulas). Such representations can be applied in the context of automated driving to describe traffic situations within the topology of the road network.
