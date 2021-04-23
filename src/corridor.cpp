@@ -159,6 +159,13 @@ std::ostream& operator<<(std::ostream& os, const Corridor& corridor) {
   return os;
 }
 
+void Corridor::fillCartesianReferencePolyline(
+    CartesianPoints2D* reference_polyline, const RealType delta_l,
+    const bool sample_boundaries) const noexcept {
+  // Sample reference line
+  reference_line_.fillCartesianPolyline(reference_polyline, delta_l);
+}
+
 void Corridor::fillCartesianPolylines(
     CartesianPoints2D* reference_polyline, CartesianPoints2D* left_polyline,
     CartesianPoints2D* right_polyline, const RealType delta_l,
