@@ -120,12 +120,15 @@ void CubicSpline::fillCartesianPolyline(CartesianPoints2D* polyline,
                                         const RealType delta_l) const {
   polyline->clear();
   if (delta_l <= 0.0) {
+    polyline->reserve(data_.cols());
     for (int idx = 0; idx < data_.cols(); idx++) {
       polyline->emplace_back(data_(kPoint_x, idx), data_(kPoint_y, idx));
     }
   } else {
     RealType query_l = 0.0;
     const RealType max_length = GetTotalLength();
+    const auto num_pts = std::ceil(max_length / delta_l) + 1;
+    polyline->reserve(num_pts);
     while (query_l <= max_length) {
       polyline->emplace_back(GetPositionAt(query_l));
       query_l += delta_l;

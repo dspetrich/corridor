@@ -19,6 +19,7 @@ SplineCoefficients2d SplineCoefficientsFromDataMatrix(
     const DataMatrix<RealType>& data) {
   SplineCoefficients2d coefficients;
   coefficients.clear();
+  coefficients.reserve(data.cols());
   for (DataIdx i = 0, max_idx = (data.cols() - 1); i < max_idx; i++) {
     coefficients.emplace_back(Coefficients2d(data.col(i), data.col(i + 1)));
   }
