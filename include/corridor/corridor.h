@@ -106,6 +106,10 @@ class Corridor {
   // Introspection
   friend std::ostream& operator<<(std::ostream& os, const Corridor& corridor);
 
+  void fillCartesianReferencePolyline(
+      CartesianPoints2D* reference_polyline, const RealType delta_l,
+      const bool sample_boundaries) const noexcept;
+
   void fillCartesianPolylines(
       CartesianPoints2D* reference_line, CartesianPoints2D* left_boundary,
       CartesianPoints2D* right_boundary, const RealType delta_l = 0.1,
