@@ -24,6 +24,12 @@ void SampleAllPolylines(const cubic_spline::CubicSpline& reference_line,
 
   RealType query_l = 0.0;
   RealType max_length = reference_line.GetTotalLength();
+  const auto num_pts = std::ceil(max_length / delta_l) + 1;
+
+  reference_polyline->reserve(num_pts);
+  left_polyline->reserve(num_pts);
+  right_polyline->reserve(num_pts);
+
   while (query_l <= max_length) {
     const CartesianPoint2D position = reference_line.GetPositionAt(query_l);
     const CartesianVector2D normal = reference_line.GetNormalVectorAt(query_l);
@@ -55,6 +61,8 @@ void FillBoundaryPolyline(const cubic_spline::CubicSpline& reference_line,
                           const FrenetPolyline& boundary,
                           CartesianPoints2D* boundary_polyline) {
   boundary_polyline->clear();
+  boundary_polyline->reserve(boundary.size());
+
   for (int i = 0, size = boundary.size(); i < size; i++) {
     const FrenetPoint2D frenet_point = boundary[i];
     const CartesianPoint2D position =
@@ -157,6 +165,13 @@ std::ostream& operator<<(std::ostream& os, const Corridor& corridor) {
   os << corridor.left_bound_ << "\n";
   os << corridor.right_bound_ << "\n";
   return os;
+}
+
+void Corridor::fillCartesianReferencePolyline(
+    CartesianPoints2D* reference_polyline, const RealType delta_l,
+    const bool sample_boundaries) const noexcept {
+  // Sample reference line
+  reference_line_.fillCartesianPolyline(reference_polyline, delta_l);
 }
 
 void Corridor::fillCartesianPolylines(
