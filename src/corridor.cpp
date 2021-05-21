@@ -189,6 +189,13 @@ CartesianPoint2D Corridor::toCartesianPoint(
   return position + frenet_point.d() * normal;
 }
 
+CartesianState2D Corridor::toCartesianState(
+    const FrenetState2D& frenet_state) const {
+  const FrenetFrame2D frenet_frame =
+      reference_line_.GetFrenetFrameAt(frenet_state.l());
+  return frenet_frame.FromFrenetState(frenet_state);
+}
+
 // /////////////////////////////////////////////////////////////////////////////
 // CorridorSequence
 // /////////////////////////////////////////////////////////////////////////////

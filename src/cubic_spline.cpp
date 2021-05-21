@@ -81,6 +81,38 @@ RealType CubicSpline::GetCurvatureAt(const RealType arc_length) const {
   return InterpolateSignedCurvatureValue(data_segment, relative_arc_length);
 }
 
+FrenetFrame2D CubicSpline::GetFrenetFrameAt(const RealType arc_length) const {
+  // Get segment index
+  DataMatrix<RealType>::Index index = GetSegmentIndexAtArcLength(arc_length);
+
+  // Construct segment data
+  const DataSegment<RealType>& data_segment =
+      data_.block<kSize, 2>(kPoint_x, index);
+
+  const RealType relative_arc_length = arc_length - data_segment(kArcLength, 0);
+
+  // Fill Frenet Frame structure
+  const SegmentInfo<IdxType, RealType> seg_point(static_cast<IdxType>(index),
+                                                 relative_arc_length);
+
+  const FrenetFrameTripod tuple =
+      InterpolateFrenetFrameTripod(data_segment, relative_arc_length);
+
+  const CartesianPoint2D& origin = std::get<0>(tuple);
+  const CartesianPoint2D& tangent = std::get<1>(tuple);
+  const CartesianPoint2D& normal = std::get<2>(tuple);
+  const RealType curvature = std::get<3>(tuple);
+  const RealType curvature_change_rate = std::get<4>(tuple);
+
+  const RealType orientation = std::atan2(tangent.y(), tangent.x());
+
+  const FrenetBase2D frenet_base(id_, arc_length, orientation, curvature,
+                                 curvature_change_rate, seg_point);
+  const FrenetFrame2D frenet_frame(frenet_base, origin, tangent, normal);
+
+  return frenet_frame;
+}
+
 FrenetFrames2D CubicSpline::FrenetFrames(const CartesianPoint2D& point) const {
   return ConstructFrenetFrames(data_, point);
 }

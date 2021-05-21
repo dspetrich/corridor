@@ -27,6 +27,28 @@ CartesianVector2D FrenetFrame2D::FromFrenetVector(
   return rotMat_F2C_ * relative_vector;
 };
 
+CartesianState2D FrenetFrame2D::FromFrenetState(
+    const FrenetState2D& frenet_state) const {
+  // TODO(dsp): add convertion for moving frenet frame assumption
+  CartesianStateVector2D cartesian_mean(
+      FromFrenetPoint(frenet_state.position()),
+      FromFrenetVector(frenet_state.velocity()));
+
+  // 4x4 rotation matrix
+  Eigen::Matrix<corridor::RealType, 4, 4> rotation_matrix =
+      Eigen::Matrix<corridor::RealType, 4, 4>::Zero();
+
+  // Fill with 2d rotation matrices
+  rotation_matrix.block<2, 2>(0, 0) = rotMat_F2C_;
+  rotation_matrix.block<2, 2>(2, 2) = rotMat_F2C_;
+
+  CartesianStateCovarianceMatrix2D cartesian_cov_mat =
+      rotation_matrix * frenet_state.covarianceMatrix() *
+      rotation_matrix.transpose();
+
+  return CartesianState2D(cartesian_mean, cartesian_cov_mat);
+}
+
 FrenetPoint2D FrenetFrame2D::FromCartesianPoint(
     const CartesianPoint2D& cartesian_position) const {
   //! Define local point

@@ -131,6 +131,8 @@ class FrenetFrame2D {
 
   CartesianVector2D FromFrenetVector(const FrenetVector2D& frenet_vector) const;
 
+  CartesianState2D FromFrenetState(const FrenetState2D& frenet_state) const;
+
   /**
    * @brief Conversion from a Cartesian-based point to the Frenet Frame
    *        r_cart = RotMat_C2F * local_cartesian_point + frenet_base
@@ -488,6 +490,13 @@ class FrenetState2D {
   FrenetStateVector2D& mean() { return mean_; }
   FrenetStateCovarianceMatrix2D& covarianceMatrix() { return cov_mat_; }
 
+  // Modifier
+  void adaptReferenceCorridor(const IdType new_corridor_id,
+                              const RealType corridor_offset) {
+    corridor_id_ = new_corridor_id;
+    mean_.l() -= corridor_offset;
+  }
+
   // Introspection
   friend std::ostream& operator<<(std::ostream& os, const FrenetState2D& state);
 
@@ -505,6 +514,7 @@ class FrenetState2D {
 // Introspection
 inline std::ostream& operator<<(std::ostream& os, const FrenetState2D& state) {
   using namespace std;
+  os << "Frenet State on: " << state.corridorId() << "\n";
   os << "Frenet State Vector: ";
   os << state.mean_.transpose() << "\n";
   os << "Frenet State CovMat:\n";

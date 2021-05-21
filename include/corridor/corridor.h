@@ -115,6 +115,7 @@ class Corridor {
       const CartesianPoints2D& cartesian_polyline) const;
 
   CartesianPoint2D toCartesianPoint(const FrenetPoint2D& frenet_point) const;
+  CartesianState2D toCartesianState(const FrenetState2D& frenet_state) const;
 
  private:
   // Reference line for the frenet frame. Not necessarily a centerline, but

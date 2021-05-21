@@ -152,6 +152,9 @@ class CartesianState2D {
       const CovarianceMatrix2D& cm_pos_vel = CovarianceMatrix2D::Zero())
       : mean_(position, velocity),
         cov_mat_(cm_position, cm_velocity, cm_pos_vel) {}
+  CartesianState2D(const CartesianStateVector2D& mean,
+                   const CartesianStateCovarianceMatrix2D& cov_mat)
+      : mean_(mean), cov_mat_(cov_mat) {}
 
   // Simple getter
   RealType x() const { return mean_.x(); }

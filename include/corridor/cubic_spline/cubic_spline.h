@@ -63,6 +63,7 @@ class CubicSpline {
   RealType GetArclengthAtIndex(const int idx) const {
     return data_(kArcLength, idx);
   }
+  FrenetFrame2D GetFrenetFrameAt(const RealType arc_length) const;
   ///@}
 
   /**
