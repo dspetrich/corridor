@@ -485,6 +485,9 @@ class FrenetState2D {
   const FrenetStateCovarianceMatrix2D& covarianceMatrix() const {
     return cov_mat_;
   }
+  // optional polar interpretation of the velocity vector. Will only be
+  // constructed if needed and then cached.
+  const PolarStatePtr getPolarVelocityStatePtr();
 
   // Non-const reference
   FrenetStateVector2D& mean() { return mean_; }
@@ -505,9 +508,7 @@ class FrenetState2D {
   FrenetStateVector2D mean_;
   FrenetStateCovarianceMatrix2D cov_mat_;
 
-  // optional polar interpretation of the velocity vector. Will only be
-  // constructed if needed and then cached.
-  const PolarStatePtr getPolarVelocityStatePtr();
+  // cached polar velocity
   PolarStatePtr polar_velocity_state_;
 };
 

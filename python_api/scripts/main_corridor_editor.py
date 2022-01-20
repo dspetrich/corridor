@@ -94,32 +94,33 @@ class CorridorInteractor:
         self.nodes = lemniscate(30, 17)
 
         self.corridor = corridor.CorridorWrapper(
-            1, self.nodes.x.tolist(), self.nodes.y.tolist())
+            1, self.nodes.x.tolist(), self.nodes.y.tolist(), [0, 1], [0, 1])
         self.plot_corridor(self.corridor)
 
         # Draw vertices and target point
         self.vertices, = self.ax.plot(self.nodes.x, self.nodes.y,
-                                      marker='o',
+                                      marker='.',
                                       color='k',
                                       markerfacecolor='k',
                                       linestyle='None',
                                       animated=True,
-                                      label='reference line nodes')
+                                      label='Ref-line polyline points')
         self.target_point, = ax.plot(15, 5,
                                      marker='o',
-                                     color='b',
-                                     markerfacecolor='b',
+                                     color='k',
+                                     markerfacecolor='k',
                                      linestyle='None',
                                      animated=True,
-                                     label='cartesian position')
+                                     label='Cartesian position')
 
         frenet_frame = self.constructFrenetFrame()
         self.frenet_frame_plot, = ax.plot(frenet_frame.points.x,
                                           frenet_frame.points.y,
                                           marker='.',
-                                          color='m',
+                                          linewidth=2,
+                                          color='b',
                                           animated=True,
-                                          label='projection \& tangent')
+                                          label='Frenet frame tangent')
 
         self.canvas.mpl_connect('draw_event', self.on_draw)
 
@@ -235,7 +236,7 @@ class CorridorInteractor:
 
     def update_corridor(self):
         self.corridor = corridor.CorridorWrapper(
-            1, self.nodes.x.tolist(), self.nodes.y.tolist())
+            1, self.nodes.x.tolist(), self.nodes.y.tolist(), [0, 1], [0, 1])
         polyline_dict = self.corridor.get_polylines(1)
         self.reference_line.set_data(polyline_dict["reference_line_x"],
                                      polyline_dict["reference_line_y"])
@@ -260,19 +261,19 @@ class CorridorInteractor:
                                             'k-.',
                                             linewidth=1,
                                             animated=True,
-                                            label='reference-line')
+                                            label='Reference-line')
         self.left_boundary, = self.ax.plot(polyline_dict["left_boundary_x"],
                                            polyline_dict["left_boundary_y"],
                                            color='tab:red',
                                            linewidth=1,
                                            animated=True,
-                                           label='left-boundary polygon')
+                                           label='Left-boundary polyline')
         self.right_boundary, = self.ax.plot(polyline_dict["right_boundary_x"],
                                             polyline_dict["right_boundary_y"],
                                             color='tab:green',
                                             linewidth=1,
                                             animated=True,
-                                            label='right-boundary polygon')
+                                            label='Right-boundary polyline')
 
     def constructFrenetFrame(self):
         target_point = self.target_point.get_xydata()
@@ -287,8 +288,8 @@ class CorridorInteractor:
 fig, ax = plt.subplots()
 interactor = CorridorInteractor(fig, ax)
 # ax.set_title('drag vertices to update path')
-ax.set_xlabel('meter')
-ax.set_ylabel('meter')
+ax.set_xlabel('x axis [m]')
+ax.set_ylabel('y axis [m]')
 ax.set_aspect('equal')
 plt.autoscale(True)
 # plt.legend(loc='upper left')

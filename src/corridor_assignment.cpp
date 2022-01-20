@@ -314,7 +314,7 @@ RealType UpstreamLongitudinalAssignmentConfidence(
                                                  0.0);
   } else {
     // Case 2) objects's projection is reasonably long
-    const RealType m = 1.0 / object_length;
+    const RealType m = -1.0 / object_length;
     const RealType b = 0.5;
     const RealType half_obj_length = 0.5 * object_length;
 
