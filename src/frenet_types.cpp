@@ -24,15 +24,20 @@ CartesianVector2D FrenetFrame2D::FromFrenetVector(
   const FrenetVector2D relative_vector{
       frenet_vector.l() - frenet_base_.arc_length, frenet_vector.d()};
   // Coordination transformation
+  return FromRelativeFrenetVector(relative_vector);
+};
+
+CartesianVector2D FrenetFrame2D::FromRelativeFrenetVector(
+    const FrenetVector2D& relative_vector) const {
+  // Coordination transformation
   return rotMat_F2C_ * relative_vector;
 };
 
 CartesianState2D FrenetFrame2D::FromFrenetState(
     const FrenetState2D& frenet_state) const {
-  // TODO(dsp): add convertion for moving frenet frame assumption
   CartesianStateVector2D cartesian_mean(
       FromFrenetPoint(frenet_state.position()),
-      FromFrenetVector(frenet_state.velocity()));
+      FromRelativeFrenetVector(frenet_state.velocity()));
 
   // 4x4 rotation matrix
   Eigen::Matrix<corridor::RealType, 4, 4> rotation_matrix =

@@ -131,6 +131,8 @@ class FrenetFrame2D {
 
   CartesianVector2D FromFrenetVector(const FrenetVector2D& frenet_vector) const;
 
+  CartesianVector2D FromRelativeFrenetVector(const FrenetVector2D& relative_vector) const;
+
   CartesianState2D FromFrenetState(const FrenetState2D& frenet_state) const;
 
   /**
